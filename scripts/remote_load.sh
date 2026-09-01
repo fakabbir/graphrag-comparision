@@ -21,6 +21,13 @@ cd "$ROOT"
 KEY="$ROOT/infra/.secrets/graphrag-demo.pem"
 SSH=(ssh -i "$KEY" -o StrictHostKeyChecking=accept-new -o ServerAliveInterval=30 ec2-user@"$HOST")
 
+# cloud-init only creates app/, models/ and data/. Creating etl/ and sql/ here
+# instead of in user_data avoids queueing an instance replacement: user_data has
+# user_data_replace_on_change = true, so editing it would destroy the host.
+echo "==> ensuring directories exist on $HOST"
+"${SSH[@]}" 'sudo install -d -o ec2-user -g ec2-user \
+  /opt/graphrag/etl /opt/graphrag/sql /opt/graphrag/data/staging /opt/graphrag/data/staging/parts'
+
 echo "==> syncing etl/ + sql/ to $HOST"
 rsync -az -e "ssh -i $KEY -o StrictHostKeyChecking=accept-new" \
   --exclude '__pycache__' --exclude '*.pyc' \

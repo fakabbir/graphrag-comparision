@@ -88,7 +88,14 @@ def main() -> None:
 
         conn.commit()
         print("\nanalyzing…")
-        cur.execute("ANALYZE;")
+        # Not a bare ANALYZE: on a burstable instance, re-sampling filing_section's
+        # 1.3 GB of text and filing_document's 1.9M rows costs many minutes of CPU
+        # credit for statistics no query in this system relies on.
+        for t in ("company", "filing", "subsidiary", "reporting_owner",
+                  "filing_auditor"):
+            cur.execute(f"ANALYZE {t};")
+        cur.execute("ANALYZE filing_section (accession_number, item_code, "
+                    "company_cik, filing_date, char_len);")
         conn.commit()
 
         print("\n--- row counts ---")
