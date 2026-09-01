@@ -196,4 +196,5 @@ Measured against the live AWS Pricing API for ap-south-1:
 
 ## Licence & data
 
-Code: private. Data: SEC EDGAR, public domain. Not investment advice.
+Code: see [`LICENSE`](LICENSE) — no rights provided.
+Data: SEC EDGAR, public domain. Not investment advice.
