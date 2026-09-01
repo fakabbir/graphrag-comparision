@@ -1,0 +1,26 @@
+# secrets & state
+infra/.secrets/
+infra/.terraform/
+infra/.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+*.tfplan
+.terraform.tfstate.lock.info
+terraform.tfvars
+.env
+.env.*
+!.env.example
+
+# python
+.venv/
+__pycache__/
+*.pyc
+
+# data (regenerable; large)
+data/raw/
+data/staging/
+data/models/
+data/*.zip
+data/*.xml
+data/form345/
+results/

@@ -1,0 +1,19 @@
+# --- data / ETL ---
+lxml==5.3.0
+beautifulsoup4==4.12.3
+psycopg[binary]==3.2.3
+neo4j==5.27.0
+requests==2.32.3
+tqdm==4.67.1
+
+# --- embeddings for the Vector-RAG baseline (CPU, local, no API cost) ---
+sentence-transformers==3.3.1
+
+# --- LangChain ---
+langchain==0.3.14
+langchain-core==0.3.29
+langchain-community==0.3.14
+langchain-openai==0.2.14
+langchain-neo4j==0.3.0
+SQLAlchemy==2.0.36
+tabulate==0.9.0

@@ -1,0 +1,186 @@
+#!/bin/bash
+# Bootstraps the GraphRAG app host: Docker + Neo4j + Caddy + a Python venv for the
+# query API. Application code is deployed separately by scripts/deploy_app.sh, so
+# this script is safe to re-run and contains no secrets (they come from SSM).
+set -euxo pipefail
+exec > >(tee /var/log/graphrag-bootstrap.log) 2>&1
+
+PROJECT="${project}"
+ENVIRONMENT="${environment}"
+REGION="${region}"
+DATA_BUCKET="${data_bucket}"
+CORS_ORIGINS="${cors_origins}"
+
+# ── packages ────────────────────────────────────────────────────────────────
+dnf -y update
+dnf -y install docker git jq python3.11 python3.11-pip python3.11-devel gcc rsync
+
+# Postgres 17 client, for psql/pg_dump against RDS from the host
+dnf -y install postgresql17 || dnf -y install postgresql16 || true
+
+systemctl enable --now docker
+usermod -aG docker ec2-user
+
+# docker compose v2 plugin (arm64)
+install -d /usr/local/lib/docker/cli-plugins
+COMPOSE_VER=v2.32.4
+curl -fsSL -o /usr/local/lib/docker/cli-plugins/docker-compose \
+  "https://github.com/docker/compose/releases/download/$COMPOSE_VER/docker-compose-linux-aarch64"
+chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
+
+# ── secrets from SSM (never baked into the AMI or user-data) ─────────────────
+install -d -m 0750 -o root -g ec2-user /etc/graphrag
+get_param() {
+  aws ssm get-parameter --region "$REGION" --name "$1" --with-decryption \
+    --query 'Parameter.Value' --output text 2>/dev/null || echo ""
+}
+
+PG_DSN=$(get_param "/$PROJECT/$ENVIRONMENT/pg_dsn")
+NEO4J_PASSWORD=$(get_param "/$PROJECT/$ENVIRONMENT/neo4j_password")
+DEEPSEEK_API_KEY=$(get_param "/$PROJECT/$ENVIRONMENT/deepseek_api_key")
+
+cat > /etc/graphrag/graphrag.env <<ENVEOF
+PG_DSN=$PG_DSN
+NEO4J_URI=bolt://127.0.0.1:7687
+NEO4J_USER=neo4j
+NEO4J_PASS=$NEO4J_PASSWORD
+DEEPSEEK_API_KEY=$DEEPSEEK_API_KEY
+DEEPSEEK_MODEL=deepseek-v4-flash
+REASONING_EFFORT=none
+EMBED_MODEL=/opt/graphrag/models/all-MiniLM-L6-v2
+DATA_BUCKET=$DATA_BUCKET
+AWS_REGION=$REGION
+CORS_ORIGINS=$CORS_ORIGINS
+HF_HUB_OFFLINE=1
+TRANSFORMERS_OFFLINE=1
+ENVEOF
+chmod 0640 /etc/graphrag/graphrag.env
+chown root:ec2-user /etc/graphrag/graphrag.env
+
+# ── Neo4j + Caddy ───────────────────────────────────────────────────────────
+install -d -o ec2-user -g ec2-user /opt/graphrag/{app,models,data}
+install -d /opt/graphrag/neo4j/{data,logs,import}
+
+cat > /opt/graphrag/docker-compose.yml <<'COMPOSEEOF'
+name: graphrag
+
+services:
+  neo4j:
+    image: neo4j:5.26-community
+    container_name: graphrag-neo4j
+    restart: unless-stopped
+    environment:
+      NEO4J_AUTH: neo4j/$${NEO4J_PASSWORD}
+      NEO4J_PLUGINS: '["apoc"]'
+      NEO4J_dbms_security_procedures_unrestricted: apoc.*
+      NEO4J_server_memory_heap_initial__size: 2G
+      NEO4J_server_memory_heap_max__size: 3G
+      NEO4J_server_memory_pagecache_size: 2G
+      NEO4J_server_default__listen__address: 0.0.0.0
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    volumes:
+      - /opt/graphrag/neo4j/data:/data
+      - /opt/graphrag/neo4j/logs:/logs
+      - /opt/graphrag/neo4j/import:/var/lib/neo4j/import
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost:7474 || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 40
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: graphrag-caddy
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - /opt/graphrag/Caddyfile:/etc/caddy/Caddyfile:ro
+      - /opt/graphrag/caddy/data:/data
+COMPOSEEOF
+
+# TLS terminates at CloudFront, so Caddy serves plain HTTP on :80 here.
+cat > /opt/graphrag/Caddyfile <<'CADDYEOF'
+{
+	admin off
+}
+
+:80 {
+	encode gzip
+
+	handle /health {
+		respond "ok" 200
+	}
+
+	handle {
+		reverse_proxy 127.0.0.1:8020 {
+			transport http {
+				read_timeout 120s
+			}
+		}
+	}
+
+	log {
+		output file /data/access.log {
+			roll_size 20MiB
+			roll_keep 5
+		}
+	}
+}
+CADDYEOF
+
+install -d /opt/graphrag/caddy/data
+echo "NEO4J_PASSWORD=$NEO4J_PASSWORD" > /opt/graphrag/.env
+chmod 0600 /opt/graphrag/.env
+
+cd /opt/graphrag
+docker compose up -d
+
+# ── embedding model (curl; huggingface_hub's downloader is unreliable here) ──
+MODEL_DIR=/opt/graphrag/models/all-MiniLM-L6-v2
+BASE="https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main"
+install -d "$MODEL_DIR/1_Pooling"
+for f in config.json modules.json sentence_bert_config.json tokenizer.json \
+         tokenizer_config.json vocab.txt special_tokens_map.json \
+         model.safetensors 1_Pooling/config.json; do
+  [ -s "$MODEL_DIR/$f" ] || curl -fsSL --retry 3 -o "$MODEL_DIR/$f" "$BASE/$f"
+done
+
+# ── python venv for the API ─────────────────────────────────────────────────
+python3.11 -m venv /opt/graphrag/venv
+/opt/graphrag/venv/bin/pip install --upgrade pip wheel
+/opt/graphrag/venv/bin/pip install \
+  "psycopg[binary]==3.2.3" "neo4j==5.27.0" "lxml==5.3.0" \
+  "sentence-transformers==3.3.1" \
+  "langchain==0.3.14" "langchain-core==0.3.29" "langchain-openai==0.2.14" \
+  "boto3" "uvicorn[standard]==0.34.0" "fastapi==0.115.6"
+
+# ── systemd unit; enabled now, starts once code is deployed ─────────────────
+cat > /etc/systemd/system/graphrag-api.service <<'UNITEOF'
+[Unit]
+Description=GraphRAG query API
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ec2-user
+WorkingDirectory=/opt/graphrag/app
+EnvironmentFile=/etc/graphrag/graphrag.env
+ExecStart=/opt/graphrag/venv/bin/python -m uvicorn api:app --host 127.0.0.1 --port 8020 --workers 2
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
+UNITEOF
+
+systemctl daemon-reload
+systemctl enable graphrag-api.service
+
+chown -R ec2-user:ec2-user /opt/graphrag/app /opt/graphrag/models /opt/graphrag/venv
+touch /var/log/graphrag-bootstrap.done
+echo "bootstrap complete"
