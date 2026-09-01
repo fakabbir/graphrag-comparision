@@ -18,6 +18,20 @@ F345 = DATA / "form345"
 csv.field_size_limit(10_000_000)
 
 
+def quarters() -> list[pathlib.Path]:
+    """Each quarterly zip is extracted to data/form345/<quarter>/.
+
+    The SEC publishes these on a lag, so the most recent quarter of a 12-month
+    window may not exist yet - stage 1's filings will then extend past the
+    ownership edges. That gap is reported rather than silently ignored.
+    """
+    dirs = sorted(d for d in F345.iterdir()
+                  if d.is_dir() and (d / "SUBMISSION.tsv").exists())
+    if not dirs:
+        raise SystemExit(f"no quarterly datasets under {F345}")
+    return dirs
+
+
 def parse_sec_date(s: str | None):
     """SEC TSVs use DD-MON-YYYY, e.g. 31-DEC-2021."""
     if not s or not s.strip():
@@ -29,13 +43,20 @@ def parse_sec_date(s: str | None):
 
 
 def tsv(name: str):
-    with (F345 / name).open(newline="", encoding="utf-8", errors="replace") as fh:
-        yield from csv.DictReader(fh, delimiter="\t")
+    """Stream one table across every extracted quarter."""
+    for qdir in quarters():
+        path = qdir / name
+        if not path.exists():
+            continue
+        with path.open(newline="", encoding="utf-8", errors="replace") as fh:
+            yield from csv.DictReader(fh, delimiter="\t")
 
 
 def main() -> None:
     rss_ciks = {int(c["cik"]) for c in read_jsonl("companies.jsonl")}
     print(f"RSS company universe: {len(rss_ciks):,}")
+    qs = quarters()
+    print(f"Form 345 quarters   : {', '.join(q.name for q in qs)}")
 
     subs = {}
     for r in tsv("SUBMISSION.tsv"):
