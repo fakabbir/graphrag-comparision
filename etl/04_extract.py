@@ -14,7 +14,7 @@ from __future__ import annotations
 import sys, re, pathlib, collections, json
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from common import RAW, read_jsonl, write_jsonl, normalize_name   # noqa: E402
+from common import RAW, STAGING, read_jsonl, write_jsonl, normalize_name  # noqa: E402
 
 from lxml import html as LH
 
@@ -197,9 +197,17 @@ def main() -> None:
     filings = {f["accession_number"]: f for f in read_jsonl("filings.jsonl")}
     print(f"manifest entries: {len(manifest)}")
 
-    sections, subs, auditors = [], [], []
+    subs, auditors = [], []
     stats = collections.Counter()
     item_hist = collections.Counter()
+
+    # section_text is by far the biggest payload, so it is written as it is
+    # produced rather than accumulated; dedupe happens on the key, not the row.
+    sections_path = STAGING / "sections.jsonl"
+    seen_sections: set[tuple[str, str]] = set()
+    section_count = 0
+    section_chars = collections.Counter()
+    sections_fh = sections_path.open("w", encoding="utf-8")
 
     for t in manifest:
         path = RAW / t["accession_number"] / t["filename"]
@@ -217,13 +225,19 @@ def main() -> None:
             stats["tenk_docs"] += 1
             items = split_items(html_to_text(raw))
             for code, body in items.items():
+                key = (acc, code)
+                if key in seen_sections:
+                    continue
+                seen_sections.add(key)
                 item_hist[code] += 1
-                sections.append({
+                section_chars[code] += len(body)
+                section_count += 1
+                sections_fh.write(json.dumps({
                     "accession_number": acc, "item_code": code,
                     "item_title": WANTED[code], "section_text": body,
                     "char_len": len(body), "company_cik": f["company_cik"],
                     "filing_date": f["filing_date"],
-                })
+                }, ensure_ascii=False, default=str) + "\n")
             if items:
                 stats["tenk_with_sections"] += 1
             a = extract_auditor(raw)
@@ -264,15 +278,16 @@ def main() -> None:
             out.append(r)
         return out
 
-    sections = dedupe(sections, lambda r: (r["accession_number"], r["item_code"]))
+    sections_fh.close()
     subs     = dedupe(subs,     lambda r: (r["accession_number"], r["name_normalized"]))
     auditors = dedupe(auditors, lambda r: r["accession_number"])
 
     print(f"\n  {dict(stats)}")
-    print(f"\n  sections    : {len(sections):,}")
+    print(f"\n  sections    : {section_count:,}  "
+          f"({sections_path.stat().st_size/1e6:.0f} MB streamed to disk)")
     for c, n in sorted(item_hist.items()):
-        avg = sum(s['char_len'] for s in sections if s['item_code'] == c) / max(n, 1)
-        print(f"      Item {c:<3s} {n:>4} filings   avg {avg:>9,.0f} chars")
+        avg = section_chars[c] / max(n, 1)
+        print(f"      Item {c:<3s} {n:>5} filings   avg {avg:>9,.0f} chars")
     print(f"  subsidiaries: {len(subs):,} across {len({s['accession_number'] for s in subs})} exhibits")
     print(f"  auditors    : {len(auditors):,}")
     if auditors:
@@ -280,7 +295,8 @@ def main() -> None:
         for n, c in top:
             print(f"      {n[:46]:46s} {c}")
 
-    write_jsonl("sections.jsonl", sections)
+    print(f"  wrote {sections_path.relative_to(sections_path.parent.parent.parent)}  "
+          f"({section_count:,} rows)")
     write_jsonl("subsidiaries.jsonl", subs)
     write_jsonl("auditors.jsonl", auditors)
 
