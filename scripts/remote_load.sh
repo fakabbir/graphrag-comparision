@@ -40,8 +40,20 @@ log() { echo "    [$(date -u +%H:%M:%S)] $*"; }
 
 if [[ "$STEP" == "all" ]]; then
   log "pulling staging data from s3://$BUCKET/staging/"
-  mkdir -p data/staging
+  mkdir -p data/staging data/staging/parts
   aws s3 sync "s3://$BUCKET/staging/" data/staging/ --only-show-errors --exclude '*' --include '*.jsonl.gz'
+  aws s3 sync "s3://$BUCKET/staging/parts/" data/staging/parts/ --only-show-errors
+
+  # Large files are uploaded as split parts: a single 434 MB multipart aborted
+  # twice on the operator's link while the CLI still reported success. Reassemble
+  # any <name>.gz.<suffix> series back into <name>.gz.
+  for base in $(ls data/staging/parts/ 2>/dev/null | sed 's/\.[a-z][a-z]$//' | sort -u); do
+    [[ -n "$base" ]] || continue
+    log "reassembling $base from parts"
+    cat data/staging/parts/"$base".* > "data/staging/$base"
+    ls -la "data/staging/$base" | awk '{printf "      %.0f MB\n", $5/1048576}'
+  done
+
   log "decompressing"
   for f in data/staging/*.jsonl.gz; do
     out="${f%.gz}"

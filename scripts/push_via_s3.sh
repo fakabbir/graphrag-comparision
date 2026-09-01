@@ -32,11 +32,25 @@ for f in "${FILES[@]}"; do
   if [[ ! -s "$gz" || "$src" -nt "$gz" ]]; then
     gzip -1 -c "$src" > "$gz"
   fi
-  raw=$(wc -c < "$src"); zip=$(wc -c < "$gz")
+  raw=$(wc -c < "$src" | tr -d "[:space:]"); zip=$(wc -c < "$gz" | tr -d "[:space:]")
   total_raw=$((total_raw + raw)); total_gz=$((total_gz + zip))
   printf "  %-26s %7.1f MB -> %6.1f MB  " "$f" "$(bc -l <<<"$raw/1048576")" "$(bc -l <<<"$zip/1048576")"
   aws s3 cp "$gz" "s3://$BUCKET/staging/$f.gz" --only-show-errors
-  echo "uploaded"
+  # Verify the object actually landed. A 434 MB upload once reported success and
+  # left nothing in the bucket, and the load then failed three stages later.
+  remote=$(aws s3api head-object --bucket "$BUCKET" --key "staging/$f.gz" \
+             --query ContentLength --output text 2>/dev/null || echo "missing")
+  if [[ "$remote" != "$zip" ]]; then
+    echo "FAILED (remote=$remote, expected=$zip)"
+    echo "  retrying once..." >&2
+    aws s3 cp "$gz" "s3://$BUCKET/staging/$f.gz" --only-show-errors
+    remote=$(aws s3api head-object --bucket "$BUCKET" --key "staging/$f.gz" \
+               --query ContentLength --output text 2>/dev/null || echo "missing")
+    [[ "$remote" == "$zip" ]] || { echo "  ERROR: $f.gz did not upload" >&2; exit 1; }
+    echo "  retry OK"
+  else
+    echo "verified"
+  fi
 done
 
 printf "\n  total %.0f MB raw -> %.0f MB uploaded (%.0f%%)\n" \

@@ -58,7 +58,7 @@ chmod 0640 /etc/graphrag/graphrag.env
 chown root:ec2-user /etc/graphrag/graphrag.env
 
 # ── Neo4j + Caddy ───────────────────────────────────────────────────────────
-install -d -o ec2-user -g ec2-user /opt/graphrag/{app,models,data}
+install -d -o ec2-user -g ec2-user /opt/graphrag/{app,etl,sql,models,data,data/staging}
 install -d /opt/graphrag/neo4j/{data,logs,import}
 
 cat > /opt/graphrag/docker-compose.yml <<'COMPOSEEOF'
