@@ -55,3 +55,12 @@ Bifrost addresses models as `provider/model`:
 Every published number was produced with `deepseek/deepseek-v4-flash`. Switching
 models in the playground changes the answers but not the recorded benchmark, and
 the UI says so wherever a model can be picked.
+
+## Deploying a change
+
+    scripts/deploy_app.sh --gateway
+
+That packages `app/` plus this directory, uploads to S3, and drives the host over
+SSM: extract, rsync into `/opt/graphrag/app/`, copy `config.json` into the
+gateway data dir, restart Bifrost and `graphrag-api`, then health-check both.
+Omit `--gateway` to ship only the Python.
