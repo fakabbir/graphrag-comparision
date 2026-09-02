@@ -45,14 +45,36 @@ from questions import QUESTIONS  # noqa: E402
 
 MODES = {"text_to_sql": mode_sql, "vector_rag": mode_vector, "graphrag": mode_graphrag}
 
-# One in-flight LLM run per mode: a hammered refresh must not fan out paid calls.
-_mode_locks = {m: threading.Lock() for m in MODES}
+# One in-flight run per (mode, model): a hammered refresh must not fan out paid
+# calls. Keyed on the model too, because the playground legitimately asks the
+# same mode for several models at once - keyed on mode alone, that fan-out
+# contended with itself and every pane but the first got a 503.
+#
+# Imperfect by design: uvicorn runs 2 worker processes, so a duplicate landing on
+# the other process is not deduplicated. It bounds accidental spend, it is not a
+# distributed lock.
+_dup_locks: dict[tuple[str, str], threading.Lock] = {}
+_dup_registry = threading.Lock()
+
+
+def _dup_lock(mode: str, model: str) -> threading.Lock:
+    key = (mode, model)
+    with _dup_registry:
+        lock = _dup_locks.get(key)
+        if lock is None:
+            lock = _dup_locks[key] = threading.Lock()
+    return lock
 
 # CloudFront's maximum origin response timeout is 60s, so a slower answer reaches
 # the browser as an HTML error page instead of JSON. We return a well-formed
 # timeout below that ceiling rather than let the edge decide.
 DEADLINE_S = float(os.environ.get("ASK_DEADLINE_S", "50"))
-_pool = concurrent.futures.ThreadPoolExecutor(max_workers=6,
+
+# The playground fans out 3 modes x up to 3 models. Sized so one UI action never
+# queues: a queued job holds its dedup lock while waiting for a worker, which
+# turns saturation into spurious "busy" errors.
+MAX_INFLIGHT = int(os.environ.get("ASK_MAX_INFLIGHT", "9"))
+_pool = concurrent.futures.ThreadPoolExecutor(max_workers=MAX_INFLIGHT,
                                               thread_name_prefix="ask")
 
 ORIGINS = [o.strip() for o in os.environ.get("CORS_ORIGINS", "").split(",") if o.strip()]
@@ -252,23 +274,24 @@ def ask(body: AskBody) -> JSONResponse:
 
     question = body.question.strip()
     mode = MODES[body.mode]
-    lock = _mode_locks[body.mode]
     t0 = time.time()
-
-    # A timed-out run keeps going in its thread and keeps the mode lock, so a
-    # second request must not queue behind it for the full deadline again.
-    if not lock.acquire(timeout=2.0):
-        return JSONResponse(
-            {"mode": body.mode,
-             "error": f"{body.mode} is still busy with a previous query. "
-                      f"A long-running query is finishing; try again shortly.",
-             "elapsed_s": round(time.time() - t0, 2)},
-            status_code=503,
-        )
 
     # An unknown id falls back to the benchmarked model rather than being passed
     # through to the gateway, which would let a caller pick any configured provider.
     chosen = model_catalog.resolve(body.model)
+    lock = _dup_lock(body.mode, chosen)
+
+    # A timed-out run keeps going in its thread and keeps its lock, so an identical
+    # request must not queue behind it for the full deadline again.
+    if not lock.acquire(timeout=2.0):
+        label = model_catalog.BY_ID.get(chosen, {}).get("label", chosen)
+        return JSONResponse(
+            {"mode": body.mode, "model": chosen,
+             "error": f"An identical {body.mode} query on {label} is already running. "
+                      f"Wait for it to finish, or pick a different model to run alongside it.",
+             "elapsed_s": round(time.time() - t0, 2)},
+            status_code=503,
+        )
 
     def _work():
         begin_request()
@@ -286,11 +309,14 @@ def ask(body: AskBody) -> JSONResponse:
         return JSONResponse(
             {"mode": body.mode, "timeout": True,
              "model": chosen,
-             "error": f"{body.mode} exceeded the {DEADLINE_S:.0f}s request deadline. "
-                      f"This is the honest outcome, not a bug: on multi-hop questions "
-                      f"the SQL this mode writes joins subsidiary x filing_section x "
-                      f"reporting_owner without narrowing first. The benchmark measured "
-                      f"92s average and 445s worst case for exactly these questions.",
+             "error": f"{body.mode} exceeded the {DEADLINE_S:.0f}s request deadline."
+                      + (" This is the honest outcome, not a bug: on multi-hop questions "
+                         "the SQL this mode writes joins subsidiary x filing_section x "
+                         "reporting_owner without narrowing first. The benchmark measured "
+                         "92s average and 445s worst case for exactly these questions."
+                         if body.mode == "text_to_sql" else
+                         " The query is still running server-side; it was the answer that "
+                         "did not arrive in time."),
              "elapsed_s": round(time.time() - t0, 2)},
             status_code=200,
         )
