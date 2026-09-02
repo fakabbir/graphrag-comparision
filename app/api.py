@@ -115,6 +115,22 @@ def build_trace(mode: str, out: dict) -> str:
 ACC_RE = re.compile(r"\b\d{10}-\d{2}-\d{6}\b")
 
 
+def _entity_present(entity: str, low: str) -> str | None:
+    """Return the alternative that matched, or None.
+
+    An entity may list acceptable alternatives separated by "|", used where a
+    question has more than one true answer - three separate filers list
+    AllianceBernstein Holding L.P. in their EX-21, so naming any one of them
+    answers "name the parent that lists it". Returning the matched alternative
+    rather than True keeps the reported entity readable.
+    """
+    for alt in entity.split("|"):
+        alt = alt.strip()
+        if alt and alt.lower() in low:
+            return alt
+    return None
+
+
 def score_against_preset(question_id: str | None, answer: str) -> dict | None:
     """Only the preset questions have hand-verified ground truth; free-form
     questions get no verdict rather than an invented one."""
@@ -124,8 +140,8 @@ def score_against_preset(question_id: str | None, answer: str) -> dict | None:
     low = (answer or "").lower()
     cited = set(ACC_RE.findall(answer or ""))
     valid = q["valid_accessions"]
-    found = [e for e in q["required_entities"] if e.lower() in low]
-    bad = [e for e in q["forbidden_entities"] if e.lower() in low]
+    found = [m for m in (_entity_present(e, low) for e in q["required_entities"]) if m]
+    bad = [m for m in (_entity_present(e, low) for e in q["forbidden_entities"]) if m]
     kw = [t for t in q["required_any"] if t.lower() in low]
     correct = cited & valid
     wrong_cites = cited - valid if valid else set()
@@ -141,7 +157,8 @@ def score_against_preset(question_id: str | None, answer: str) -> dict | None:
                         and (bool(bad) or bool(wrong_cites)),
         "entity_recall": round(entity_recall, 2),
         "entities_found": found,
-        "entities_missing": [e for e in q["required_entities"] if e not in found],
+        "entities_missing": [e.split("|")[0].strip() for e in q["required_entities"]
+                             if _entity_present(e, low) is None],
         "forbidden_present": bad,
         "cited": sorted(cited),
         "correct_citations": sorted(correct),

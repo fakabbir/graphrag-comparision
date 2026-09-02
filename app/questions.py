@@ -118,12 +118,18 @@ T3 = [
 ]
 
 # ── T4: verified subsidiary-name -> independent filer pairs ────────────────
+# The parent field accepts alternatives separated by "|". Most of these
+# subsidiaries are listed by exactly one parent, but AllianceBernstein Holding
+# L.P. is listed by three (verified against the loaded subsidiary table), so
+# naming any one of them answers the question as asked. Encoding only one was a
+# scoring defect: it marked a true answer wrong.
 T4 = [
     ("American Airlines, Inc.", "American Airlines Group", 4515),
     ("AEP Texas Inc.", "American Electric Power", 1721781),
     ("Athene Holding Ltd.", "Apollo Global Management", 1527469),
     ("Alexander's, Inc.", "Vornado Realty Trust", 3499),
-    ("AllianceBernstein Holding L.P.", "AllianceBernstein L.P.", 825313),
+    ("AllianceBernstein Holding L.P.",
+     "AllianceBernstein L.P.|Equitable Holdings|AllianceBernstein Holding", 825313),
 ]
 
 

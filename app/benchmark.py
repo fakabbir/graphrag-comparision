@@ -24,6 +24,22 @@ REFUSAL = re.compile(
     r"unable to|missing|not possible to answer|excerpts do not)", re.I)
 
 
+def _entity_present(entity: str, low: str) -> str | None:
+    """Return the alternative that matched, or None.
+
+    An entity may list acceptable alternatives separated by "|", used where a
+    question has more than one true answer - three separate filers list
+    AllianceBernstein Holding L.P. in their EX-21, so naming any one of them
+    answers "name the parent that lists it". Returning the matched alternative
+    rather than True keeps the reported entity readable.
+    """
+    for alt in entity.split("|"):
+        alt = alt.strip()
+        if alt and alt.lower() in low:
+            return alt
+    return None
+
+
 def _no_provenance(q: dict, sc: dict) -> bool:
     """Right entities, right keywords, no factual error - but cited no filing."""
     return bool(q["valid_accessions"]) and sc["entity_recall"] == 1.0 \
@@ -34,9 +50,9 @@ def _no_provenance(q: dict, sc: dict) -> bool:
 def score(q: dict, answer: str) -> dict:
     a = answer or ""
     low = a.lower()
-    ents = [e for e in q["required_entities"] if e.lower() in low]
+    ents = [m for m in (_entity_present(e, low) for e in q["required_entities"]) if m]
     anys = [t for t in q["required_any"] if t.lower() in low]
-    bad  = [e for e in q["forbidden_entities"] if e.lower() in low]
+    bad  = [m for m in (_entity_present(e, low) for e in q["forbidden_entities"]) if m]
 
     cited = set(ACC_RE.findall(a))
     valid = q["valid_accessions"]
@@ -61,7 +77,8 @@ def score(q: dict, answer: str) -> dict:
         "correct": correct,
         "entity_recall": round(entity_recall, 2),
         "entities_found": ents,
-        "entities_missing": [e for e in q["required_entities"] if e not in ents],
+        "entities_missing": [e.split("|")[0].strip() for e in q["required_entities"]
+                             if _entity_present(e, low) is None],
         "keywords_found": anys,
         "forbidden_present": bad,
         "cited": sorted(cited),
