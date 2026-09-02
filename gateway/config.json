@@ -1,0 +1,35 @@
+{
+  "providers": {
+    "deepseek": {
+      "keys": [
+        {
+          "name": "deepseek-primary",
+          "value": "env.DEEPSEEK_API_KEY",
+          "models": ["*"],
+          "weight": 1.0
+        }
+      ],
+      "network_config": {
+        "default_request_timeout_in_seconds": 180,
+        "max_retries": 2
+      }
+    },
+    "bedrock": {
+      "keys": [
+        {
+          "name": "bedrock-instance-profile",
+          "value": "",
+          "models": ["*"],
+          "weight": 1.0,
+          "bedrock_key_config": {
+            "region": "ap-south-1"
+          }
+        }
+      ],
+      "network_config": {
+        "default_request_timeout_in_seconds": 180,
+        "max_retries": 2
+      }
+    }
+  }
+}

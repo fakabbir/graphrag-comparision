@@ -1,0 +1,26 @@
+
+  bifrost:
+    image: maximhq/bifrost:latest
+    container_name: graphrag-bifrost
+    restart: unless-stopped
+    # Loopback only. The gateway can reach Bedrock with the instance role, so
+    # exposing it publicly would be an open, credential-free LLM proxy.
+    ports:
+      - "127.0.0.1:8080:8080"
+    environment:
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY}
+      AWS_REGION: ap-south-1
+      # No AWS keys: Bifrost falls back to the SDK default chain, which finds the
+      # EC2 instance profile via IMDS.
+    volumes:
+      # Bifrost reads its config from $APP_DIR/config.json, i.e. /app/data -
+      # NOT /app/config.json. It seeds a sqlite config store from that file on
+      # first boot, so the file lives inside the persistent data dir.
+      - /opt/graphrag/gateway/data:/app/data
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost:8080/metrics || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 20

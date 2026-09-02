@@ -43,6 +43,28 @@ resource "aws_iam_role_policy" "app_inline" {
         Action   = ["ssm:GetParameter", "ssm:GetParameters", "ssm:GetParametersByPath"]
         Resource = "arn:aws:ssm:${var.region}:*:parameter/${var.project}/${var.environment}/*"
       },
+      # Bifrost reaches Bedrock through the instance profile, so no AWS keys are
+      # written into its config. Invoke only - it never needs to manage models.
+      # Inference profiles ("apac.*", "global.*") route across regions, so the
+      # resource list has to cover the foundation models they front as well.
+      {
+        Effect = "Allow"
+        Action = [
+          "bedrock:InvokeModel",
+          "bedrock:InvokeModelWithResponseStream",
+          "bedrock:Converse",
+          "bedrock:ConverseStream",
+        ]
+        Resource = [
+          "arn:aws:bedrock:*::foundation-model/*",
+          "arn:aws:bedrock:*:${data.aws_caller_identity.me.account_id}:inference-profile/*",
+        ]
+      },
+      {
+        Effect   = "Allow"
+        Action   = ["bedrock:ListFoundationModels", "bedrock:ListInferenceProfiles"]
+        Resource = "*"
+      },
     ]
   })
 }

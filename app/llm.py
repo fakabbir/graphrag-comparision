@@ -6,7 +6,9 @@ from dataclasses import dataclass, field
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage, SystemMessage
 
-from config import DEEPSEEK_BASE_URL, DEEPSEEK_MODEL, require_api_key
+from config import (DEEPSEEK_BASE_URL, DEEPSEEK_MODEL, GATEWAY_BASE_URL,
+                    require_api_key)
+from models import BENCHMARK_MODEL
 
 
 @dataclass
@@ -68,6 +70,25 @@ def request_usage() -> dict:
 
 _clients: dict[tuple, ChatOpenAI] = {}
 
+# Which model this thread's request should use. The three modes run in three
+# threads answering one question, so a module-level default would let a
+# concurrent request with a different model bleed across columns.
+_model_tl = threading.local()
+
+
+def set_model(model: str | None) -> None:
+    _model_tl.model = model or None
+
+
+def current_model() -> str:
+    """The gateway takes `provider/model`; talking to DeepSeek direct takes the
+    bare model name, so strip the provider when no gateway is configured."""
+    chosen = getattr(_model_tl, "model", None) or (
+        BENCHMARK_MODEL if GATEWAY_BASE_URL else DEEPSEEK_MODEL)
+    if not GATEWAY_BASE_URL and "/" in chosen:
+        return chosen.split("/", 1)[1]
+    return chosen
+
 
 # DeepSeek v4 thinks by default: an uncapped reasoning trace burned ~33k completion
 # tokens per call (max_tokens only bounds the visible answer). "none" disables it.
@@ -77,18 +98,22 @@ REASONING = os.environ.get("REASONING_EFFORT", "none")
 
 def llm(temperature: float = 0.0, max_tokens: int = 900,
         reasoning: str | None = None) -> ChatOpenAI:
-    """One client per (temperature, max_tokens, reasoning). A single cached client
-    silently reuses the FIRST call's max_tokens, which let answers run to 20k+."""
+    """One client per (model, temperature, max_tokens, reasoning). A single cached
+    client silently reuses the FIRST call's max_tokens, which let answers run to
+    20k+, and would now also pin the first caller's model."""
     reasoning = REASONING if reasoning is None else reasoning
-    key = (temperature, max_tokens, reasoning)
+    model = current_model()
+    key = (model, temperature, max_tokens, reasoning)
     if key not in _clients:
         kw = {}
-        if reasoning not in ("", "default"):
+        # reasoning_effort is an OpenAI-shaped parameter. Bedrock models reject
+        # it, so only send it to the provider that understands it.
+        if reasoning not in ("", "default") and model.startswith(("deepseek", "openai")):
             kw["reasoning_effort"] = reasoning     # first-class param in langchain_openai
         _clients[key] = ChatOpenAI(
-            model=DEEPSEEK_MODEL,
+            model=model,
             api_key=require_api_key(),
-            base_url=DEEPSEEK_BASE_URL,
+            base_url=GATEWAY_BASE_URL or DEEPSEEK_BASE_URL,
             temperature=temperature,
             max_tokens=max_tokens,
             timeout=180,

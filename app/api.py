@@ -37,9 +37,10 @@ import mode_graphrag  # noqa: E402
 import mode_sql  # noqa: E402
 import mode_vector  # noqa: E402
 import stores  # noqa: E402
-from config import DEEPSEEK_MODEL  # noqa: E402
+from config import DEEPSEEK_MODEL, GATEWAY_BASE_URL  # noqa: E402
 from benchmark import REFUSAL  # noqa: E402
-from llm import USAGE, begin_request, request_usage  # noqa: E402
+import models as model_catalog  # noqa: E402
+from llm import USAGE, begin_request, current_model, request_usage, set_model  # noqa: E402
 from questions import QUESTIONS  # noqa: E402
 
 MODES = {"text_to_sql": mode_sql, "vector_rag": mode_vector, "graphrag": mode_graphrag}
@@ -192,7 +193,8 @@ def db_stats() -> dict:
     except Exception as e:  # noqa: BLE001
         out["neo4j"] = {"ok": False, "error": str(e)[:200]}
     out["api_key"] = bool(os.environ.get("DEEPSEEK_API_KEY", "").strip())
-    out["model"] = DEEPSEEK_MODEL
+    out["model"] = current_model()
+    out["gateway"] = _gateway_health()
     return out
 
 
@@ -200,6 +202,20 @@ def db_stats() -> dict:
 @app.get("/health", response_class=PlainTextResponse)
 def health() -> str:
     return "ok"
+
+
+def _gateway_health() -> dict:
+    """Whether Bifrost is reachable, so the UI can say why a model list is empty."""
+    if not GATEWAY_BASE_URL:
+        return {"enabled": False, "reason": "GATEWAY_BASE_URL is empty; talking to DeepSeek direct."}
+    root = GATEWAY_BASE_URL.rsplit("/v1", 1)[0]
+    try:
+        import urllib.request
+        with urllib.request.urlopen(f"{root}/metrics", timeout=2) as r:
+            return {"enabled": True, "ok": r.status < 500, "url": GATEWAY_BASE_URL}
+    except Exception as e:  # noqa: BLE001
+        return {"enabled": True, "ok": False, "url": GATEWAY_BASE_URL,
+                "error": f"{type(e).__name__}: {e}"[:160]}
 
 
 @app.get("/api/meta")
@@ -213,6 +229,8 @@ def meta() -> dict:
              "required": q["required_entities"]}
             for q in QUESTIONS
         ],
+        "models": model_catalog.MODELS,
+        "benchmarkModel": model_catalog.BENCHMARK_MODEL,
         "usage": USAGE.snapshot(),
     }
 
@@ -221,6 +239,7 @@ class AskBody(BaseModel):
     question: str = Field(min_length=1, max_length=2000)
     mode: str
     question_id: str | None = None
+    model: str | None = None
 
 
 @app.post("/api/ask")
@@ -247,11 +266,17 @@ def ask(body: AskBody) -> JSONResponse:
             status_code=503,
         )
 
+    # An unknown id falls back to the benchmarked model rather than being passed
+    # through to the gateway, which would let a caller pick any configured provider.
+    chosen = model_catalog.resolve(body.model)
+
     def _work():
         begin_request()
+        set_model(chosen)
         try:
             return mode.run(question, verbose=False), request_usage()
         finally:
+            set_model(None)
             lock.release()
 
     future = _pool.submit(_work)
@@ -260,6 +285,7 @@ def ask(body: AskBody) -> JSONResponse:
     except concurrent.futures.TimeoutError:
         return JSONResponse(
             {"mode": body.mode, "timeout": True,
+             "model": chosen,
              "error": f"{body.mode} exceeded the {DEADLINE_S:.0f}s request deadline. "
                       f"This is the honest outcome, not a bug: on multi-hop questions "
                       f"the SQL this mode writes joins subsidiary x filing_section x "
@@ -277,6 +303,8 @@ def ask(body: AskBody) -> JSONResponse:
 
     out = dict(out)
     out.update({
+        "model": chosen,
+        "benchmarkModel": chosen == model_catalog.BENCHMARK_MODEL,
         "elapsed_s": round(time.time() - t0, 2),
         "tokens": mine["total_tokens"],
         "llm_calls": mine["calls"],

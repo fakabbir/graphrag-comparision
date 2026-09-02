@@ -106,3 +106,6 @@ resource "local_sensitive_file" "app_key" {
   filename        = "${path.module}/.secrets/${var.project}-${var.environment}.pem"
   file_permission = "0600"
 }
+
+# Bedrock inference-profile ARNs are account-scoped, so the policy needs the id.
+data "aws_caller_identity" "me" {}
