@@ -59,10 +59,10 @@ output "estimated_monthly_usd" {
   value = {
     rds_instance  = "61.32  (db.t4g.medium @ $0.084/hr)"
     rds_storage   = "9.12   (100 GB gp3)"
-    ec2_instance  = "42.56  (m7g.large @ $0.0583/hr)"
+    ec2_instance  = "85.12  (m7g.xlarge @ $0.1166/hr)"
     ec2_storage   = "9.12   (100 GB gp3)"
     s3_cloudfront = "~0.50  (free tier at demo volume)"
     nat_gateway   = "0.00   (deliberately not used)"
-    total         = "~122/month"
+    total         = "~165/month"
   }
 }
