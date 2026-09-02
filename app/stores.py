@@ -1,6 +1,6 @@
 """Thin data-access layer shared by all three retrieval modes."""
 from __future__ import annotations
-import functools, re, threading
+import functools, os, re, threading
 
 import psycopg
 from neo4j import GraphDatabase
@@ -28,6 +28,15 @@ def pg():
             conn.execute("SET hnsw.iterative_scan = relaxed_order")
         except Exception:                     # noqa: BLE001  (older pgvector)
             pass
+        # LLM-authored SQL is untrusted for COST as well as for correctness. On the
+        # multi-hop questions the model joins subsidiary x filing_section x
+        # reporting_owner without narrowing first; measured worst case was 445s for
+        # a single SELECT. Unbounded, that is a denial of service against your own
+        # warehouse, so every connection carries a deadline. 0 disables it, which is
+        # what the archived benchmark ran with.
+        ms = int(os.environ.get("PG_STATEMENT_TIMEOUT_MS", "45000"))
+        if ms > 0:
+            conn.execute(f"SET statement_timeout = {ms}")
         _local.pg = conn
     return conn
 

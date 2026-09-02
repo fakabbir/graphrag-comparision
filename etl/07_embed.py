@@ -31,6 +31,15 @@ import psycopg  # noqa: E402
 CHUNK, OVERLAP = 1400, 200
 EMBED_BATCH = 256
 
+# Which 10-K items to embed. Defaults to Item 1A (Risk Factors) because that is
+# the only section any benchmark question asks about and the only one GraphRAG
+# ever reads (fetch_snippets pulls item_code='1A'). Embedding all seven items on
+# the 12-month corpus is 1.10M chunks / ~5.2 GB at ~102 chunks/s = ~3 hours;
+# Item 1A alone is ~508k. A focused corpus also makes the vector baseline
+# STRONGER, not weaker, so the comparison stays fair.
+# Set EMBED_ITEMS="1,1A,7" (or "ALL") to widen it.
+EMBED_ITEMS = os.environ.get("EMBED_ITEMS", "1A")
+
 # Honour EMBED_MODEL when set (the app host keeps the model outside data/, which
 # holds regenerable staging output); fall back to the local checkout layout.
 MODEL = os.environ.get(
@@ -67,7 +76,17 @@ def main() -> None:
 
     with write.cursor() as cur:
         cur.execute("TRUNCATE section_chunk RESTART IDENTITY")
-        cur.execute("SELECT count(*), coalesce(sum(char_len), 0) FROM filing_section")
+        if EMBED_ITEMS.upper() == "ALL":
+            item_filter, item_params = "", []
+            print("embedding ALL item codes", flush=True)
+        else:
+            items = [x.strip() for x in EMBED_ITEMS.split(",") if x.strip()]
+            item_filter = "WHERE fs.item_code = ANY(%s)"
+            item_params = [items]
+            print(f"embedding item codes: {', '.join(items)}", flush=True)
+        cur.execute(
+            "SELECT count(*), coalesce(sum(char_len), 0) FROM filing_section fs "
+            + item_filter.replace("fs.", ""), item_params)
         n_sections, total_chars = cur.fetchone()
     est = total_chars // (CHUNK - OVERLAP) + n_sections
     print(f"sections {n_sections:,} · {total_chars:,} chars · ~{est:,} chunks expected",
@@ -81,13 +100,14 @@ def main() -> None:
     # instead of buffering the whole result set in this process.
     with read.cursor(name="sections_stream") as src:
         src.itersize = 20
-        src.execute("""
+        src.execute(f"""
             SELECT fs.accession_number, fs.item_code, fs.company_cik,
                    c.name, fs.section_text
             FROM filing_section fs
             JOIN company c ON c.cik = fs.company_cik
+            {item_filter}
             ORDER BY fs.accession_number, fs.item_code
-        """)
+        """, item_params)
 
         buf: list[tuple] = []          # at most one section's chunks + a partial batch
 

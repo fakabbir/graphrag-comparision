@@ -14,6 +14,7 @@ torch encode() calls SIGSEGV the interpreter, so that lock is load-bearing here.
 """
 from __future__ import annotations
 
+import concurrent.futures
 import os
 import pathlib
 import re
@@ -37,6 +38,7 @@ import mode_sql  # noqa: E402
 import mode_vector  # noqa: E402
 import stores  # noqa: E402
 from config import DEEPSEEK_MODEL  # noqa: E402
+from benchmark import REFUSAL  # noqa: E402
 from llm import USAGE, begin_request, request_usage  # noqa: E402
 from questions import QUESTIONS  # noqa: E402
 
@@ -44,6 +46,13 @@ MODES = {"text_to_sql": mode_sql, "vector_rag": mode_vector, "graphrag": mode_gr
 
 # One in-flight LLM run per mode: a hammered refresh must not fan out paid calls.
 _mode_locks = {m: threading.Lock() for m in MODES}
+
+# CloudFront's maximum origin response timeout is 60s, so a slower answer reaches
+# the browser as an HTML error page instead of JSON. We return a well-formed
+# timeout below that ceiling rather than let the edge decide.
+DEADLINE_S = float(os.environ.get("ASK_DEADLINE_S", "50"))
+_pool = concurrent.futures.ThreadPoolExecutor(max_workers=6,
+                                              thread_name_prefix="ask")
 
 ORIGINS = [o.strip() for o in os.environ.get("CORS_ORIGINS", "").split(",") if o.strip()]
 if not ORIGINS:
@@ -119,11 +128,17 @@ def score_against_preset(question_id: str | None, answer: str) -> dict | None:
     bad = [e for e in q["forbidden_entities"] if e.lower() in low]
     kw = [t for t in q["required_any"] if t.lower() in low]
     correct = cited & valid
+    wrong_cites = cited - valid if valid else set()
     entity_recall = len(found) / max(len(q["required_entities"]), 1)
+    is_correct = (entity_recall == 1.0 and bool(kw) and not bad
+                  and (not valid or bool(correct)))
+    refused = bool(REFUSAL.search(answer or ""))
     return {
         "question_id": question_id,
-        "correct": (entity_recall == 1.0 and bool(kw) and not bad
-                    and (not valid or bool(correct))),
+        "correct": is_correct,
+        "refused": refused,
+        "hallucinated": (not is_correct) and (not refused)
+                        and (bool(bad) or bool(wrong_cites)),
         "entity_recall": round(entity_recall, 2),
         "entities_found": found,
         "entities_missing": [e for e in q["required_entities"] if e not in found],
@@ -200,11 +215,42 @@ def ask(body: AskBody) -> JSONResponse:
             {"error": "DEEPSEEK_API_KEY is not set on the server."}, status_code=503)
 
     question = body.question.strip()
-    begin_request()
+    mode = MODES[body.mode]
+    lock = _mode_locks[body.mode]
     t0 = time.time()
+
+    # A timed-out run keeps going in its thread and keeps the mode lock, so a
+    # second request must not queue behind it for the full deadline again.
+    if not lock.acquire(timeout=2.0):
+        return JSONResponse(
+            {"mode": body.mode,
+             "error": f"{body.mode} is still busy with a previous query. "
+                      f"A long-running query is finishing; try again shortly.",
+             "elapsed_s": round(time.time() - t0, 2)},
+            status_code=503,
+        )
+
+    def _work():
+        begin_request()
+        try:
+            return mode.run(question, verbose=False), request_usage()
+        finally:
+            lock.release()
+
+    future = _pool.submit(_work)
     try:
-        with _mode_locks[body.mode]:
-            out = MODES[body.mode].run(question, verbose=False)
+        out, mine = future.result(timeout=DEADLINE_S)
+    except concurrent.futures.TimeoutError:
+        return JSONResponse(
+            {"mode": body.mode, "timeout": True,
+             "error": f"{body.mode} exceeded the {DEADLINE_S:.0f}s request deadline. "
+                      f"This is the honest outcome, not a bug: on multi-hop questions "
+                      f"the SQL this mode writes joins subsidiary x filing_section x "
+                      f"reporting_owner without narrowing first. The benchmark measured "
+                      f"92s average and 445s worst case for exactly these questions.",
+             "elapsed_s": round(time.time() - t0, 2)},
+            status_code=200,
+        )
     except Exception as e:  # noqa: BLE001
         return JSONResponse(
             {"mode": body.mode, "error": f"{type(e).__name__}: {e}",
@@ -212,7 +258,6 @@ def ask(body: AskBody) -> JSONResponse:
             status_code=500,
         )
 
-    mine = request_usage()
     out = dict(out)
     out.update({
         "elapsed_s": round(time.time() - t0, 2),

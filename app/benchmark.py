@@ -130,8 +130,8 @@ def main() -> None:
                   f"{after['calls']-before['calls']} LLM calls, "
                   f"{out.get('evidence_chars',0):,} evidence chars")
 
-            results.append({"question_id": q["id"], "kind": q["kind"], "mode": name,
-                            "trial": trial,
+            results.append({"question_id": q["id"], "type": q.get("type"),
+                            "kind": q["kind"], "mode": name, "trial": trial,
                             "error": err, "score": sc, "elapsed_s": round(elapsed, 2),
                             "tokens": after["total_tokens"] - before["total_tokens"],
                             "llm_calls": after["calls"] - before["calls"],
@@ -162,6 +162,26 @@ def main() -> None:
                 extra = (f" h{h_}" if h_ else "") + (f" p{np_}" if np_ else "")
                 cells.append(f"{p_}/{len(rs)}{extra}")
         print(f"{q['id']:6s} {q['kind'][:38]:38s} " + " ".join(f"{c:>13s}" for c in cells))
+
+    # per-type rollup: with 5 questions per type the interesting number is the
+    # rate within a type, not the individual question.
+    types = sorted({q.get("type", q["id"]) for q in qs})
+    if len(types) > 1:
+        print("\n" + "BY QUESTION TYPE".center(100))
+        print("-" * 100)
+        hdr = f"{'type':6s} {'kind':38s} " + " ".join(f"{m:>13s}" for m in modes)
+        print(hdr)
+        for t in types:
+            tq = [q for q in qs if q.get("type") == t]
+            kind = tq[0]["kind"][:38] if tq else ""
+            cells = []
+            for m in modes:
+                rs = [r for r in results if r["mode"] == m
+                      and any(r["question_id"] == q["id"] for q in tq)]
+                p_ = sum(1 for r in rs if r["score"]["correct"])
+                h_ = sum(1 for r in rs if r["score"]["hallucinated"])
+                cells.append(f"{p_}/{len(rs)}" + (f" h{h_}" if h_ else ""))
+            print(f"{t:6s} {kind:38s} " + " ".join(f"{c:>13s}" for c in cells))
 
     print("\n  key: N/3 = passes;  hN = hallucinations;  pN = right answer, no citation\n")
     print(f"{'':44s} " + " ".join(f"{m:>13s}" for m in modes))
