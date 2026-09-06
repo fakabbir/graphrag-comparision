@@ -1,0 +1,208 @@
+% Shared body for both layouts. Floats use the \widefig / \widetab
+% environments, which expand to figure*/table* in two-column mode and to
+% figure/table in one-column mode, so a single file serves both builds.
+% ════════════════════════════════════════════════════════════════════════
+\input{sec/intro}
+
+\begin{widefig}[htbp]
+\centering
+\input{gen/fig_containers.tex}
+\caption{The three facts a multi-hop question needs live in three different
+containers. Item~1A is narrative prose and is the only section embedded; EX-21 is
+a structured list attached to the same filing; insider roles are in a separate
+filing type entirely. Every projected edge carries the accession number of the
+filing that asserts it.}
+\label{fig:containers}
+\end{widefig}
+
+% ════════════════════════════════════════════════════════════════════════
+\input{sec/related}
+
+% ════════════════════════════════════════════════════════════════════════
+\input{sec/dataset}
+
+\begin{table}[htbp]
+\centering
+\input{gen/tab_corpus.tex}
+\caption{The loaded corpus. Twelve monthly EDGAR feeds, 2025-09 through 2026-08.
+Node and edge counts are live counts from the graph; the per-type edge breakdown
+in \Cref{sec:dataset} sums exactly to the total shown here.}
+\label{tab:corpus}
+\end{table}
+
+\begin{widetab}[htbp]
+\centering
+\small
+\input{gen/tab_items.tex}
+\caption{Narrative sections extracted per 10-K Item. Only Item~1A (bold) is
+embedded, giving 508{,}714 chunks. Its mean length exceeds the encoder's
+256-word-piece window by roughly two orders of magnitude, which is why chunking is
+forced rather than optional.}
+\label{tab:items}
+\end{widetab}
+
+\begin{widefig}[htbp]
+\centering
+\begin{subfigure}[t]{0.48\linewidth}
+\centering
+\input{gen/fig_subdist.tex}
+\caption{EX-21 disclosure per filer.}
+\label{fig:subdist}
+\end{subfigure}\hfill
+\begin{subfigure}[t]{0.48\linewidth}
+\centering
+\input{gen/fig_months.tex}
+\caption{Filings per month.}
+\label{fig:months}
+\end{subfigure}
+\caption{Corpus shape. (a) EX-21 disclosure is extremely skewed --- 275 filers list one subsidiary, 62 list more than 500 --- so any generated \texttt{LIMIT} over a join to this table starves whole entities unless rows are balanced per entity first. (b) The small 2025-08 bucket is spillover, since a monthly feed contains filings dated at the end of the preceding month.}
+\label{fig:corpusdist}
+\end{widefig}
+
+\begin{figure}[htbp]
+\centering
+\input{gen/fig_pipeline.tex}
+\caption{Ingestion wall-clock, about 252 minutes total. Document fetch and
+embedding are roughly 82\% of it. The fetch component is bounded externally by
+EDGAR's ten-requests-per-second fair-access policy and cannot be parallelized
+away.}
+\label{fig:pipeline}
+\end{figure}
+
+% ════════════════════════════════════════════════════════════════════════
+\input{sec/arch}
+
+\begin{widefig}[htbp]
+\centering
+\resizebox{\linewidth}{!}{\input{gen/fig_arch.tex}}
+\caption{The three retrieval arms over shared stores. Text-to-SQL and GraphRAG use
+two LLM calls each; vector RAG uses one and has no query language to repair. In
+GraphRAG only the first hop is LLM-authored: entity expansion is deterministic and
+system-authored, which is what prevents one entity's fan-out from consuming the
+row budget and the model then reporting that the other entities do not exist.}
+\label{fig:arch}
+\end{widefig}
+
+% ════════════════════════════════════════════════════════════════════════
+\input{sec/design}
+
+% ════════════════════════════════════════════════════════════════════════
+\input{sec/results}
+
+\begin{widetab}[htbp]
+\centering
+\input{gen/tab_main.tex}
+\caption{Aggregate results over 180 scored attempts. \emph{Questions solved}
+credits a question only when all three of its attempts passed. Bold marks the best
+value in a row. The outcome labels partition the attempts, so pass, falsehood,
+uncited, refused and the residual failures sum to 60 per arm.}
+\label{tab:main}
+\end{widetab}
+
+\begin{widetab}[htbp]
+\centering
+\small
+\input{gen/tab_bytype.tex}
+\caption{Per-category results. \textbf{Q}~=~questions solved on all three
+attempts (of 5); \textbf{A}~=~attempts passed (of 15). Two of the four categories
+were pre-registered as ones the graph should lose. It lost T2 as expected and T4
+against expectation.}
+\label{tab:bytype}
+\end{widetab}
+
+\begin{widefig}[htbp]
+\centering
+\begin{subfigure}[t]{0.48\linewidth}
+\centering
+\input{gen/fig_bytype.tex}
+\caption{Attempts passed per category.}
+\label{fig:bytype}
+\end{subfigure}\hfill
+\begin{subfigure}[t]{0.48\linewidth}
+\centering
+\input{gen/fig_outcomes.tex}
+\caption{How all 60 attempts resolved.}
+\label{fig:outcomes}
+\end{subfigure}
+\caption{Results. The composition in (b) matters as much as the rate in (a): vector RAG's 45 refusals are a benign failure, text-to-SQL's 16 uncited answers are right but unverifiable, and GraphRAG was never uncited because the traversal returns accession numbers before any text is read.}
+\label{fig:results}
+\end{widefig}
+
+\begin{widefig}[htbp]
+\centering
+\begin{subfigure}[t]{0.48\linewidth}
+\centering
+\input{gen/fig_latency.tex}
+\caption{Mean latency per category (log).}
+\label{fig:latency}
+\end{subfigure}\hfill
+\begin{subfigure}[t]{0.48\linewidth}
+\centering
+\input{gen/fig_cost.tex}
+\caption{Tokens against attempts passed.}
+\label{fig:cost}
+\end{subfigure}
+\caption{The economics. (a) Text-to-SQL's T3 mean of 92\,s, worst attempt 445\,s, is the SQL and not the model: the generated queries join three tables without narrowing first. (b) GraphRAG's accuracy is bought, at roughly 17{,}300 tokens per passing attempt against text-to-SQL's 5{,}450.}
+\label{fig:econ}
+\end{widefig}
+
+\begin{table}[htbp]
+\centering
+\input{gen/tab_repair.tex}
+\caption{Use of the single repair allowance, which both query-writing arms
+receive on identical terms. GraphRAG leaned on it nearly five times as often, and
+on T4 needed it on every attempt. Vector RAG has no query language to repair.}
+\label{tab:repair}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\scriptsize
+\input{gen/tab_grid.tex}
+\caption{Every one of the 180 attempts, unaggregated; three glyphs per cell are
+the three attempts. \gpass~pass, \ghall~falsehood, \gunc~correct but uncited,
+\gref~refused, \gfail~other failure. $\star$ marks the featured multi-hop
+question. 10 of these 60 cells did not return the same label on all three
+attempts.}
+\label{tab:grid}
+\end{table}
+
+\begin{figure}[htbp]
+\centering
+\input{gen/fig_repair.tex}
+\caption{Repair frequency by category. GraphRAG required a repair on all fifteen
+T4 attempts, which is the entity-resolution category it lost.}
+\label{fig:repair}
+\end{figure}
+
+% ════════════════════════════════════════════════════════════════════════
+\input{sec/failures}
+
+\begin{widetab}[htbp]
+\centering
+\small
+\input{gen/tab_crossmodel.tex}
+\caption{Cross-model probe on the featured multi-hop question with the GraphRAG
+pipeline held constant. One question and one attempt per model, so this is a probe
+rather than a measurement; it supports only the negative conclusion that a
+single-model benchmark bounds what can be claimed.}
+\label{tab:crossmodel}
+\end{widetab}
+
+% ════════════════════════════════════════════════════════════════════════
+\input{sec/threats}
+
+% ════════════════════════════════════════════════════════════════════════
+\input{sec/repro}
+
+\begin{widetab}[htbp]
+\centering
+\input{gen/tab_cost.tex}
+\caption{Monthly infrastructure cost, on-demand pricing in
+\texttt{ap-south-1}. The embedding pass used a temporarily resized 16-vCPU host
+at 97 chunks/s; the instance was scaled back afterwards.}
+\label{tab:cost}
+\end{widetab}
+
+% ════════════════════════════════════════════════════════════════════════
+\input{sec/conclusion}

@@ -1,5 +1,14 @@
 % ── engine-agnostic preamble ─────────────────────────────────────────────
-\usepackage[margin=2.15cm]{geometry}
+%
+% Shared by main.tex (one column) and main-2col.tex (two columns). The entry
+% file declares \newif\iftwocol and sets it before inputting this.
+
+\iftwocol
+  \usepackage[margin=1.75cm]{geometry}
+  \setlength{\columnsep}{6.5mm}
+\else
+  \usepackage[margin=2.15cm]{geometry}
+\fi
 \usepackage{booktabs}
 \usepackage{multirow}
 \usepackage{array}
@@ -18,7 +27,8 @@
 \usepackage{titlesec}
 \usepackage[hidelinks]{hyperref}
 \usepackage[capitalise,nameinlink]{cleveref}
-\usepackage{natbib}
+% numeric citation labels: [1], and [4-7] for runs
+\usepackage[numbers,sort&compress]{natbib}
 \usepackage{fancyhdr}
 
 % ── palette (IBM Carbon, so the paper matches the project's UI) ──────────
@@ -62,3 +72,24 @@
 \setcounter{topnumber}{3}
 \setcounter{bottomnumber}{2}
 \setcounter{totalnumber}{5}
+
+% ── layout-independent float environments ────────────────────────────────
+% A float that is too wide for one column must become figure*/table* in the
+% two-column build. Declaring the environments here keeps body.tex identical
+% for both layouts instead of forking it.
+\iftwocol
+  \newenvironment{widefig}{\begin{figure*}}{\end{figure*}}
+  \newenvironment{widetab}{\begin{table*}}{\end{table*}}
+\else
+  \newenvironment{widefig}{\begin{figure}}{\end{figure}}
+  \newenvironment{widetab}{\begin{table}}{\end{table}}
+\fi
+
+% Two columns at 10pt leaves little slack: allow a ragged bottom rather than
+% stretching interline space, and give TeX more room before it overfills.
+\iftwocol
+  \raggedbottom
+  \setlength{\emergencystretch}{2.4em}
+  \captionsetup{font=footnotesize}
+  \captionsetup[sub]{font=footnotesize}
+\fi

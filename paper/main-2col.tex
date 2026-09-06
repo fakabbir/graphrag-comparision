@@ -1,0 +1,21 @@
+% Two-column build.  make twocol     ->  build/main-2col.pdf
+%
+% 10pt rather than 11pt: at 11pt an 8cm column cannot carry the numeric tables
+% without breaking rows. Floats that do not fit a column are declared widefig /
+% widetab in body.tex and become figure*/table* here.
+\documentclass[10pt,a4paper,twocolumn]{article}
+\newif\iftwocol \twocoltrue
+\input{preamble}
+\newlength{\abstractwidth}\setlength{\abstractwidth}{0.93\textwidth}
+
+\begin{document}
+% span both columns for the title and abstract
+\twocolumn[\input{titleblock}]
+\input{body}
+
+\bibliographystyle{unsrtnat}
+\bibliography{refs}
+
+\appendix
+\input{sec/appendix}
+\end{document}
