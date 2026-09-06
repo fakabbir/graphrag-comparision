@@ -1,0 +1,29 @@
+\begin{tabular}{@{}l ccc@{}}
+\toprule
+\textbf{Q} & \textbf{Text-to-SQL} & \textbf{Vector RAG} & \textbf{GraphRAG} \\
+\midrule
+\texttt{T1-1} & \gunc\gunc\gunc & \gref\gunc\gunc & \gpass\gpass\gpass \\
+\texttt{T1-2} & \gunc\gunc\gunc & \gpass\gpass\gpass & \gpass\gpass\gpass \\
+\texttt{T1-3} & \gunc\gunc\gunc & \gref\gunc\gref & \gpass\gpass\gpass \\
+\texttt{T1-4} & \gunc\gunc\gunc & \gref\gref\gref & \gpass\gpass\gpass \\
+\texttt{T1-5} & \gunc\gunc\gref & \gunc\gunc\gunc & \gpass\gpass\gpass \\
+\addlinespace[2pt]
+\texttt{T2-1} & \gpass\gpass\gpass & \gref\gref\gref & \gfail\gfail\gfail \\
+\texttt{T2-2} & \gpass\gpass\gpass & \gref\gref\gref & \gpass\gpass\gpass \\
+\texttt{T2-3} & \gpass\gpass\gpass & \gref\gref\gref & \gref\gfail\gref \\
+\texttt{T2-4} & \gpass\gpass\gpass & \gref\gref\gref & \gfail\gfail\gfail \\
+\texttt{T2-5} & \gpass\gpass\gpass & \gref\gref\gref & \gpass\gpass\gpass \\
+\addlinespace[2pt]
+\texttt{T3-1} & \gref\gref\gref & \gref\gref\gref & \gpass\gpass\gpass \\
+\texttt{T3-2}\,$\star$ & \ghall\gfail\gref & \gref\gref\gref & \gpass\gpass\gpass \\
+\texttt{T3-3} & \ghall\gref\gref & \gref\gref\gref & \gpass\gpass\gpass \\
+\texttt{T3-4} & \gref\gref\gref & \gref\gref\gref & \gpass\gpass\gpass \\
+\texttt{T3-5} & \gref\gunc\gunc & \gref\gref\gref & \gpass\gpass\gpass \\
+\addlinespace[2pt]
+\texttt{T4-1} & \gpass\gpass\gpass & \gref\gref\gref & \gpass\gpass\gpass \\
+\texttt{T4-2} & \gpass\gpass\gpass & \gref\gref\gref & \gref\gref\gref \\
+\texttt{T4-3} & \gpass\gpass\gpass & \gref\gref\gref & \gpass\gref\gpass \\
+\texttt{T4-4} & \gref\gpass\gpass & \gpass\gpass\gpass & \gref\gpass\gref \\
+\texttt{T4-5} & \gpass\gpass\gpass & \gpass\gpass\gpass & \gpass\gpass\gpass \\
+\bottomrule
+\end{tabular}

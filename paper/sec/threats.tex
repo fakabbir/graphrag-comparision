@@ -1,0 +1,70 @@
+\section{Threats to Validity}
+\label{sec:threats}
+
+\textbf{One corpus, one domain.} Every measurement comes from a single snapshot of
+one filing system. SEC disclosure is unusually favourable to structural retrieval:
+it is mandated, schematized, and carries a stable public entity identifier in the
+CIK. Corpora without an authoritative identifier --- internal wikis, support
+tickets, email --- would require the entity-resolution step this paper largely
+assumes, and \Cref{sec:failures} shows that step is our weakest layer. Nothing
+here should be read as generalizing to such corpora.
+
+\textbf{Twenty questions is a small sample.} Each category rests on five
+questions, so a category-level rate has a wide confidence interval: a single
+question changes a category by 20 percentage points at question level and 3
+attempts out of 15 at attempt level. The category results are directional, not
+conclusive. The one result we would defend as strong is T3, where the margin is
+15 of 15 against 0 of 15 for both baselines and the mechanism is independently
+diagnosed.
+
+\textbf{The questions were written by the author of the graph.} This is the most
+serious threat and it cannot be fully mitigated. We took three measures: two of
+the four categories were pre-registered as ones the graph should lose, and it did
+lose both; the T3 subjects were selected by a measured criterion rather than by
+inspection of results (\Cref{sec:design}); and the ground truth was verified
+against the loaded tables rather than against model outputs. None of this
+eliminates the risk that the question set favours the design in ways we cannot
+see. An independent question set is the obvious next step.
+
+\textbf{One model, and the verdict moves with it.} All reported numbers come from
+\texttt{deepseek-v4-flash}. The probe in \Cref{tab:crossmodel} shows the featured
+question passing on one model, failing on another and being refused by a third
+with the retrieval architecture held constant. Our results characterize
+\emph{architecture $\times$ model}, and we did not vary the model across the full
+180 attempts.
+
+\textbf{The graph inherits EX-21 incompleteness.} Rule 601(b)(21)(ii) allows
+filers to omit insignificant subsidiaries, so \texttt{:SUBSIDIARY\_OF} is a floor
+on corporate structure. Any question whose correct answer depends on a subsidiary
+the filer chose not to disclose is unanswerable from this corpus by any of the
+three arms, and our ground truth is defined against what was disclosed rather than
+against reality.
+
+\textbf{T4 measures an implementation, not an architecture --- and that cuts both
+ways.} GraphRAG's loss on T4 is attributable to 0.12\% \texttt{:RESOLVES\_TO}
+coverage and a name-normalization mismatch, both fixable. A charitable reading
+says the architecture would win T4 once repaired. We resist it: we did not repair
+and re-measure, so the charitable reading is untested. The same logic applies in
+reverse to the wins --- some part of GraphRAG's T1 and T3 margins may reflect
+implementation effort we spent on the graph and not on the baselines.
+
+\textbf{Repair asymmetry favours the graph.} As recorded in \Cref{sec:design},
+the zero-row repair trigger fires for a graph query that misses but not for an
+over-broad SQL join that returns many wrong rows. GraphRAG used its repair on 34
+of 60 attempts against text-to-SQL's 7, so it received materially more effective
+assistance from an identical rule.
+
+\textbf{A single year, and a moving corpus.} The window spans twelve monthly
+feeds. Annual filings cluster seasonally (\Cref{fig:months}), so the mix of form
+types is not stationary within it, and the absolute counts are not reproducible
+against a later snapshot because EDGAR accumulates.
+
+\textbf{Undetected ground-truth errors are likely.} We found eight defects in our
+own harness (\Cref{sec:repro}), one of them a ground-truth error discovered
+\emph{after} the results were first computed: a question accepted one of three
+filers that genuinely list a subsidiary, so all three arms were naming a real
+parent and being marked wrong. Correcting it and re-scoring the stored answers
+moved text-to-SQL from 28 to 29, vector RAG from 6 to 9 and GraphRAG from 44 to
+45. That we found one after believing the results were final is direct evidence
+that others may remain, and the correction happened to help the baselines more
+than the graph.

@@ -1,0 +1,119 @@
+\begin{tikzpicture}[
+  font=\footnotesize,
+  >={Stealth[length=1.7mm,width=1.3mm]},
+  box/.style={draw=gray!55, line width=0.4pt, rounded corners=1.5pt, fill=white,
+              align=center, font=\scriptsize, inner sep=3pt,
+              text width=3.9cm, minimum width=4.3cm, minimum height=0.95cm},
+  slim/.style={box, minimum height=0.6cm, fill=gray!6, draw=gray!45},
+  shared/.style={box, text width=11cm, minimum width=11.5cm, minimum height=0.85cm,
+                 fill=gray!8, draw=gray!55},
+  gapbox/.style={box, dashed, draw=gray!55, fill=gray!4, text=gray,
+                 minimum height=2.55cm},
+  key/.style={box, line width=1pt, draw=okcol!70!black, fill=okcol!18,
+              minimum height=1.15cm},
+  tag/.style={draw=okcol!70!black, fill=okcol!22, rounded corners=1pt,
+              inner sep=1.5pt, font=\tiny\bfseries},
+  dbicon/.style={cylinder, shape border rotate=90, aspect=0.32, draw=gray!60,
+                 fill=gray!18, line width=0.35pt, inner sep=0pt,
+                 minimum width=3.8mm, minimum height=2.6mm},
+  lane/.style={rounded corners=3pt, inner sep=4pt, line width=0.5pt},
+  arr/.style={->, draw=gray!65, line width=0.5pt},
+  wire/.style={draw=gray!65, line width=0.5pt},
+]
+
+%% ---------- shared question -------------------------------------------------
+\node[shared] (q) at (5.05,0)
+  {\textbf{Natural-language question over the 10-K / insider corpus}\\[1pt]
+   \tiny identical prompt, identical model and $T{=}0$ for all three arms};
+
+%% ---------- lane 1: text-to-SQL --------------------------------------------
+\node[box] (l1a) at (0,-2.15)
+  {LLM writes SQL\\[1pt]\tiny complete schema in prompt; one repair retry};
+\node[box] (l1b) at (0,-3.50)
+  {PostgreSQL 17\\[1pt]\tiny execute; 45\,s statement timeout};
+\node[slim] (l1c) at (0,-4.70) {result rows \tiny(LIMIT capped at 2{,}000)};
+\node[gapbox] (l1d) at (0,-6.70)
+  {\itshape no deterministic stage\\[3pt]
+   \tiny\upshape whatever join the model happened to write \emph{is} the retrieval:
+   one bad predicate silently returns a well-formed, incomplete row set};
+\node[box] (l1e) at (0,-8.85)
+  {LLM answers\\[1pt]\tiny from the returned rows only};
+
+%% ---------- lane 2: vector RAG ---------------------------------------------
+\node[box] (l2a) at (5.05,-2.15)
+  {MiniLM-L6-v2 encoder\\[1pt]\tiny 384-d, mean-pooled, normalised (no LLM)};
+\node[box] (l2b) at (5.05,-3.50)
+  {HNSW cosine top-8\\[1pt]\tiny pgvector over 508{,}714 chunks};
+\node[slim] (l2c) at (5.05,-4.70) {8 chunks \tiny(1{,}400 chars, 200 overlap)};
+\node[gapbox] (l2d) at (5.05,-6.70)
+  {\itshape no query language\\[3pt]
+   \tiny\upshape nothing to repair and nothing to expand: the eight nearest
+   neighbours are the entire evidence set, whatever the question asked for};
+\node[box] (l2e) at (5.05,-8.85)
+  {LLM answers\\[1pt]\tiny from the retrieved chunks only};
+
+%% ---------- lane 3: GraphRAG -----------------------------------------------
+\node[box] (l3a) at (10.1,-2.15)
+  {LLM writes stage-1 Cypher\\[1pt]\tiny \emph{identify entities only}; one repair retry};
+\node[box] (l3b) at (10.1,-3.50)
+  {Neo4j 5.26 + APOC\\[1pt]\tiny match entity nodes};
+\node[slim] (l3c) at (10.1,-4.70) {entity nodes \tiny(seeds, no text yet)};
+\node[key] (l3d) at (10.1,-6.00)
+  {\textbf{Deterministic expansion}\\[1pt]
+   \tiny system code, not the LLM: fixed traversal per seed, 6 filings each, 48 total};
+\node[box, minimum height=1cm] (l3e) at (10.1,-7.475)
+  {Exact text fetch\\[1pt]\tiny by \texttt{accession\_number} primary key from
+   PostgreSQL; 900-char window};
+\node[box] (l3f) at (10.1,-8.85)
+  {LLM answers\\[1pt]\tiny graph facts + exact snippets};
+
+%% ---------- lane backgrounds ------------------------------------------------
+\begin{scope}[on background layer]
+  \node[lane, fill=sqlcol!7,   draw=sqlcol!40,   fit=(l1a)(l1b)(l1c)(l1d)(l1e)] (L1) {};
+  \node[lane, fill=veccol!7,   draw=veccol!40,   fit=(l2a)(l2b)(l2c)(l2d)(l2e)] (L2) {};
+  \node[lane, fill=graphcol!7, draw=graphcol!40, fit=(l3a)(l3b)(l3c)(l3d)(l3e)(l3f)] (L3) {};
+\end{scope}
+
+\node[anchor=south west, font=\footnotesize\bfseries, text=sqlcol!75!black]   at (L1.north west) {Text-to-SQL};
+\node[anchor=south west, font=\footnotesize\bfseries, text=veccol!75!black]   at (L2.north west) {Vector RAG};
+\node[anchor=south west, font=\footnotesize\bfseries, text=graphcol!75!black] at (L3.north west) {GraphRAG};
+\node[anchor=south east, font=\tiny, text=gray!65] at (L1.north east) {2 LLM calls};
+\node[anchor=south east, font=\tiny, text=gray!65] at (L2.north east) {1 LLM call};
+\node[anchor=south east, font=\tiny, text=gray!65] at (L3.north east) {2 LLM calls};
+
+%% ---------- store glyphs ----------------------------------------------------
+\node[dbicon, anchor=north east] at ([shift={(-2pt,-2pt)}]l1b.north east) {};
+\node[dbicon, anchor=north east] at ([shift={(-2pt,-2pt)}]l2b.north east) {};
+\node[dbicon, anchor=north east] at ([shift={(-2pt,-2pt)}]l3b.north east) {};
+\node[dbicon, anchor=north east] at ([shift={(-2pt,-2pt)}]l3e.north east) {};
+
+%% ---------- the claim tag ---------------------------------------------------
+\node[tag, anchor=south east] at ([yshift=1.5pt]l3d.north east) {not LLM-written};
+
+%% ---------- fan-out from the question --------------------------------------
+\coordinate (b1) at (5.05,-0.95);
+\draw[wire] (q.south) -- (b1);
+\draw[arr] (b1) -| (l1a.north);
+\draw[arr] (b1) -| (l2a.north);
+\draw[arr] (b1) -| (l3a.north);
+
+%% ---------- in-lane flow ----------------------------------------------------
+\draw[arr] (l1a) -- (l1b);  \draw[arr] (l1b) -- (l1c);
+\draw[arr] (l1c) -- (l1d);  \draw[arr] (l1d) -- (l1e);
+\draw[arr] (l2a) -- (l2b);  \draw[arr] (l2b) -- (l2c);
+\draw[arr] (l2c) -- (l2d);  \draw[arr] (l2d) -- (l2e);
+\draw[arr] (l3a) -- (l3b);  \draw[arr] (l3b) -- (l3c);
+\draw[arr] (l3c) -- (l3d);  \draw[arr] (l3d) -- (l3e);
+\draw[arr] (l3e) -- (l3f);
+
+%% ---------- fan-in to the answer -------------------------------------------
+\coordinate (b2) at (5.05,-9.80);
+\draw[wire] (l1e.south) |- (b2);
+\draw[wire] (l2e.south) |- (b2);
+\draw[wire] (l3f.south) |- (b2);
+\node[shared] (ans) at (5.05,-10.45)
+  {\textbf{Answer}\\[1pt]\tiny scored programmatically -- entity recall, required
+   keywords, forbidden entities, citation validity (no LLM judge)};
+\draw[arr] (b2) -- (ans.north);
+
+\end{tikzpicture}

@@ -24,3 +24,6 @@ data/*.zip
 data/*.xml
 data/form345/
 results/
+
+# paper build output
+paper/build/

@@ -1,0 +1,1620 @@
+{
+ "window": "2025-09 \u2192 2026-08",
+ "corpus": {
+  "filings": 167050,
+  "companies": 10511,
+  "documents": 1904128,
+  "sections": 23649,
+  "chunks": 508714,
+  "subsidiaries": 212124,
+  "ownerRows": 150917,
+  "auditors": 5835,
+  "size": "3803 MB",
+  "graph_nodes": 430257,
+  "graph_edges": 561144,
+  "insiders": 51558,
+  "docs_fetched": 10592,
+  "docs_gb": 19.7,
+  "db_bytes": 3987734528,
+  "hnsw_bytes": 1033895936
+ },
+ "items": [
+  [
+   "1",
+   5539,
+   352550560,
+   63649,
+   717422
+  ],
+  [
+   "1A",
+   5210,
+   608417255,
+   116779,
+   1060461
+  ],
+  [
+   "1B",
+   63,
+   2000524,
+   31754,
+   127289
+  ],
+  [
+   "2",
+   2683,
+   12281341,
+   4577,
+   390319
+  ],
+  [
+   "3",
+   1518,
+   5126849,
+   3377,
+   117185
+  ],
+  [
+   "7",
+   5609,
+   294551458,
+   52514,
+   473035
+  ],
+  [
+   "7A",
+   3027,
+   16460821,
+   5438,
+   276843
+  ]
+ ],
+ "graph": {
+  "nodes": [
+   [
+    "Filing",
+    167050
+   ],
+   [
+    "Subsidiary",
+    200869
+   ],
+   [
+    "Person",
+    51558
+   ],
+   [
+    "Company",
+    10511
+   ],
+   [
+    "AuditFirm",
+    269
+   ]
+  ],
+  "edges": [
+   [
+    "SUBSIDIARY_OF",
+    212124
+   ],
+   [
+    "FILED",
+    167050
+   ],
+   [
+    "OFFICER_OF",
+    86180
+   ],
+   [
+    "DIRECTOR_OF",
+    70167
+   ],
+   [
+    "OWNS_SHARES",
+    19542
+   ],
+   [
+    "AUDITED_BY",
+    5835
+   ],
+   [
+    "RESOLVES_TO",
+    246
+   ]
+  ]
+ },
+ "pipeline": [
+  [
+   "fetch feeds",
+   0.9
+  ],
+  [
+   "parse 12 feeds",
+   4.2
+  ],
+  [
+   "fetch 10,592 docs",
+   118.0
+  ],
+  [
+   "Form 3/4/5",
+   0.4
+  ],
+  [
+   "extract HTML",
+   19.0
+  ],
+  [
+   "upload to S3",
+   12.0
+  ],
+  [
+   "load RDS",
+   6.0
+  ],
+  [
+   "embed 508,714 chunks",
+   87.0
+  ],
+  [
+   "HNSW + graph",
+   4.0
+  ]
+ ],
+ "measured": {
+  "embedRate": 97,
+  "uploadMBs": 0.7,
+  "s3PullSeconds": 3,
+  "secRateLimit": 10,
+  "compressionPct": 26
+ },
+ "forms": [
+  [
+   "8-K",
+   63490
+  ],
+  [
+   "424B2",
+   47125
+  ],
+  [
+   "10-Q",
+   16882
+  ],
+  [
+   "10-K",
+   5576
+  ],
+  [
+   "DEF 14A",
+   3931
+  ],
+  [
+   "485BPOS",
+   3853
+  ],
+  [
+   "497",
+   3132
+  ],
+  [
+   "N-CSRS",
+   2875
+  ],
+  [
+   "N-CSR",
+   2841
+  ],
+  [
+   "S-8",
+   2296
+  ],
+  [
+   "8-K/A",
+   1402
+  ],
+  [
+   "20-F",
+   1073
+  ]
+ ],
+ "months": [
+  [
+   "2025-08",
+   362
+  ],
+  [
+   "2025-09",
+   6581
+  ],
+  [
+   "2025-10",
+   8000
+  ],
+  [
+   "2025-11",
+   11776
+  ],
+  [
+   "2025-12",
+   11504
+  ],
+  [
+   "2026-01",
+   11513
+  ],
+  [
+   "2026-02",
+   15902
+  ],
+  [
+   "2026-03",
+   17934
+  ],
+  [
+   "2026-04",
+   16633
+  ],
+  [
+   "2026-05",
+   19594
+  ],
+  [
+   "2026-06",
+   15082
+  ],
+  [
+   "2026-07",
+   14050
+  ],
+  [
+   "2026-08",
+   18119
+  ]
+ ],
+ "sic": [
+  [
+   "(unclassified)",
+   2677
+  ],
+  [
+   "PHARMACEUTICAL PREPARATIONS",
+   631
+  ],
+  [
+   "BLANK CHECKS",
+   426
+  ],
+  [
+   "SERVICES-PREPACKAGED SOFTWARE",
+   315
+  ],
+  [
+   "REAL ESTATE INVESTMENT TRUSTS",
+   278
+  ],
+  [
+   "BIOLOGICAL PRODUCTS, (NO DISGNOSTIC SUBSTANCES)",
+   194
+  ],
+  [
+   "STATE COMMERCIAL BANKS",
+   191
+  ],
+  [
+   "SURGICAL & MEDICAL INSTRUMENTS & APPARATUS",
+   159
+  ],
+  [
+   "FINANCE SERVICES",
+   155
+  ],
+  [
+   "SERVICES-BUSINESS SERVICES, NEC",
+   145
+  ],
+  [
+   "COMMODITY CONTRACTS BROKERS & DEALERS",
+   131
+  ],
+  [
+   "ELECTRIC SERVICES",
+   123
+  ]
+ ],
+ "auditors": [
+  [
+   "Ernst & Young LLP",
+   737
+  ],
+  [
+   "PricewaterhouseCoopers LLP",
+   709
+  ],
+  [
+   "Deloitte & Touche LLP",
+   646
+  ],
+  [
+   "KPMG LLP",
+   595
+  ],
+  [
+   "GRANT THORNTON LLP",
+   207
+  ],
+  [
+   "WithumSmith+Brown, PC",
+   198
+  ],
+  [
+   "DELOITTE & TOUCHE LLP",
+   188
+  ],
+  [
+   "BDO USA, P.C.",
+   123
+  ],
+  [
+   "CBIZ CPAs P.C.",
+   119
+  ],
+  [
+   "Crowe LLP",
+   90
+  ]
+ ],
+ "jurisdictions": [
+  [
+   "Delaware",
+   62504
+  ],
+  [
+   "DE",
+   6175
+  ],
+  [
+   "United Kingdom",
+   5699
+  ],
+  [
+   "Netherlands",
+   3269
+  ],
+  [
+   "United States",
+   3176
+  ],
+  [
+   "China",
+   3152
+  ],
+  [
+   "Germany",
+   2952
+  ],
+  [
+   "Texas",
+   2806
+  ],
+  [
+   "Cayman Islands",
+   2701
+  ],
+  [
+   "California",
+   2433
+  ],
+  [
+   "Canada",
+   2393
+  ],
+  [
+   "Australia",
+   2343
+  ]
+ ],
+ "topParents": [
+  [
+   "Ventas, Inc.",
+   2780
+  ],
+  [
+   "HCA Healthcare, Inc.",
+   2476
+  ],
+  [
+   "AES CORP",
+   1577
+  ],
+  [
+   "COMCAST CORP",
+   1476
+  ],
+  [
+   "Blackstone Inc.",
+   1423
+  ],
+  [
+   "Starwood Real Estate Income Trust, Inc.",
+   1388
+  ],
+  [
+   "Apollo Global Management, Inc.",
+   1347
+  ],
+  [
+   "HEALTHPEAK PROPERTIES, INC.",
+   1325
+  ],
+  [
+   "KKR & Co. Inc.",
+   1259
+  ],
+  [
+   "TENET HEALTHCARE CORP",
+   1200
+  ],
+  [
+   "LENNAR CORP /NEW/",
+   1175
+  ],
+  [
+   "THERMO FISHER SCIENTIFIC INC.",
+   1168
+  ]
+ ],
+ "subDist": [
+  [
+   "1",
+   275
+  ],
+  [
+   "2-5",
+   950
+  ],
+  [
+   "6-20",
+   1261
+  ],
+  [
+   "21-100",
+   1079
+  ],
+  [
+   "101-500",
+   439
+  ],
+  [
+   "500+",
+   62
+  ]
+ ],
+ "roles": [
+  [
+   "other",
+   4044
+  ],
+  [
+   "ten_pct_owner",
+   19542
+  ],
+  [
+   "director",
+   70167
+  ],
+  [
+   "officer",
+   86180
+  ]
+ ],
+ "multiCompany": [
+  [
+   "1 company",
+   46060
+  ],
+  [
+   "2",
+   4345
+  ],
+  [
+   "3",
+   800
+  ],
+  [
+   "4-5",
+   239
+  ],
+  [
+   "6+",
+   114
+  ]
+ ],
+ "tables": [
+  [
+   "section_chunk",
+   2493014016
+  ],
+  [
+   "filing_section",
+   724860928
+  ],
+  [
+   "filing_document",
+   561872896
+  ],
+  [
+   "subsidiary",
+   71729152
+  ],
+  [
+   "filing",
+   66076672
+  ],
+  [
+   "reporting_owner",
+   50241536
+  ],
+  [
+   "company",
+   6922240
+  ],
+  [
+   "filing_auditor",
+   1081344
+  ]
+ ],
+ "types": [
+  {
+   "id": "T1",
+   "kind": "single-document semantic",
+   "expect": "vector RAG or GraphRAG",
+   "modes": {
+    "text_to_sql": {
+     "attempts_pass": 0,
+     "attempts": 15,
+     "q_solid": 0,
+     "q_partial": 0,
+     "questions": 5,
+     "halluc": 0,
+     "uncited": 14,
+     "refused": 1,
+     "fail": 0,
+     "lat_mean": 3.4,
+     "lat_max": 4.2,
+     "tokens": 28484
+    },
+    "vector_rag": {
+     "attempts_pass": 3,
+     "attempts": 15,
+     "q_solid": 1,
+     "q_partial": 0,
+     "questions": 5,
+     "halluc": 0,
+     "uncited": 6,
+     "refused": 6,
+     "fail": 0,
+     "lat_mean": 1.6,
+     "lat_max": 5.2,
+     "tokens": 29433
+    },
+    "graphrag": {
+     "attempts_pass": 15,
+     "attempts": 15,
+     "q_solid": 5,
+     "q_partial": 0,
+     "questions": 5,
+     "halluc": 0,
+     "uncited": 0,
+     "refused": 0,
+     "fail": 0,
+     "lat_mean": 4.3,
+     "lat_max": 4.9,
+     "tokens": 40452
+    }
+   }
+  },
+  {
+   "id": "T2",
+   "kind": "structured aggregation",
+   "expect": "text-to-SQL",
+   "modes": {
+    "text_to_sql": {
+     "attempts_pass": 15,
+     "attempts": 15,
+     "q_solid": 5,
+     "q_partial": 0,
+     "questions": 5,
+     "halluc": 0,
+     "uncited": 0,
+     "refused": 0,
+     "fail": 0,
+     "lat_mean": 1.9,
+     "lat_max": 2.6,
+     "tokens": 24604
+    },
+    "vector_rag": {
+     "attempts_pass": 0,
+     "attempts": 15,
+     "q_solid": 0,
+     "q_partial": 0,
+     "questions": 5,
+     "halluc": 0,
+     "uncited": 0,
+     "refused": 15,
+     "fail": 0,
+     "lat_mean": 1.3,
+     "lat_max": 2.3,
+     "tokens": 29742
+    },
+    "graphrag": {
+     "attempts_pass": 6,
+     "attempts": 15,
+     "q_solid": 2,
+     "q_partial": 0,
+     "questions": 5,
+     "halluc": 0,
+     "uncited": 0,
+     "refused": 2,
+     "fail": 7,
+     "lat_mean": 7.0,
+     "lat_max": 21.8,
+     "tokens": 590453
+    }
+   }
+  },
+  {
+   "id": "T3",
+   "kind": "multi-hop relational + text",
+   "expect": "GraphRAG",
+   "modes": {
+    "text_to_sql": {
+     "attempts_pass": 0,
+     "attempts": 15,
+     "q_solid": 0,
+     "q_partial": 0,
+     "questions": 5,
+     "halluc": 2,
+     "uncited": 2,
+     "refused": 10,
+     "fail": 1,
+     "lat_mean": 91.8,
+     "lat_max": 445.5,
+     "tokens": 73694
+    },
+    "vector_rag": {
+     "attempts_pass": 0,
+     "attempts": 15,
+     "q_solid": 0,
+     "q_partial": 0,
+     "questions": 5,
+     "halluc": 0,
+     "uncited": 0,
+     "refused": 15,
+     "fail": 0,
+     "lat_mean": 2.0,
+     "lat_max": 4.0,
+     "tokens": 28538
+    },
+    "graphrag": {
+     "attempts_pass": 15,
+     "attempts": 15,
+     "q_solid": 5,
+     "q_partial": 0,
+     "questions": 5,
+     "halluc": 0,
+     "uncited": 0,
+     "refused": 0,
+     "fail": 0,
+     "lat_mean": 6.7,
+     "lat_max": 10.7,
+     "tokens": 93859
+    }
+   }
+  },
+  {
+   "id": "T4",
+   "kind": "cross-document entity resolution",
+   "expect": "GraphRAG",
+   "modes": {
+    "text_to_sql": {
+     "attempts_pass": 14,
+     "attempts": 15,
+     "q_solid": 4,
+     "q_partial": 1,
+     "questions": 5,
+     "halluc": 0,
+     "uncited": 0,
+     "refused": 1,
+     "fail": 0,
+     "lat_mean": 4.1,
+     "lat_max": 6.7,
+     "tokens": 31389
+    },
+    "vector_rag": {
+     "attempts_pass": 6,
+     "attempts": 15,
+     "q_solid": 2,
+     "q_partial": 0,
+     "questions": 5,
+     "halluc": 0,
+     "uncited": 0,
+     "refused": 9,
+     "fail": 0,
+     "lat_mean": 1.6,
+     "lat_max": 2.7,
+     "tokens": 31137
+    },
+    "graphrag": {
+     "attempts_pass": 9,
+     "attempts": 15,
+     "q_solid": 2,
+     "q_partial": 2,
+     "questions": 5,
+     "halluc": 0,
+     "uncited": 0,
+     "refused": 6,
+     "fail": 0,
+     "lat_mean": 5.9,
+     "lat_max": 8.8,
+     "tokens": 55736
+    }
+   }
+  }
+ ],
+ "totals": {
+  "text_to_sql": {
+   "passes": 29,
+   "runs": 60,
+   "halluc": 2,
+   "refused": 12,
+   "uncited": 16,
+   "tokens": 158171,
+   "latency": 25.3,
+   "evidence": 3170,
+   "q_solid": 9,
+   "q_partial": 1,
+   "questions": 20,
+   "lat_max": 445.5,
+   "calls": 127
+  },
+  "vector_rag": {
+   "passes": 9,
+   "runs": 60,
+   "halluc": 0,
+   "refused": 45,
+   "uncited": 6,
+   "tokens": 118850,
+   "latency": 1.6,
+   "evidence": 8557,
+   "q_solid": 3,
+   "q_partial": 0,
+   "questions": 20,
+   "lat_max": 5.2,
+   "calls": 60
+  },
+  "graphrag": {
+   "passes": 45,
+   "runs": 60,
+   "halluc": 0,
+   "refused": 8,
+   "uncited": 0,
+   "tokens": 780500,
+   "latency": 5.9,
+   "evidence": 6485,
+   "q_solid": 14,
+   "q_partial": 2,
+   "questions": 20,
+   "lat_max": 21.8,
+   "calls": 154
+  }
+ },
+ "usage": {
+  "calls": 341,
+  "prompt_tokens": 995657,
+  "completion_tokens": 61864,
+  "reasoning_tokens": 0,
+  "total_tokens": 1057521
+ },
+ "repair": {
+  "text_to_sql": {
+   "total": 7,
+   "of": 60,
+   "by_type": {
+    "T1": 3,
+    "T2": 0,
+    "T3": 1,
+    "T4": 3
+   }
+  },
+  "graphrag": {
+   "total": 34,
+   "of": 60,
+   "by_type": {
+    "T1": 4,
+    "T2": 9,
+    "T3": 6,
+    "T4": 15
+   }
+  },
+  "vector_rag": {
+   "total": 0,
+   "of": 60,
+   "by_type": {
+    "T1": 0,
+    "T2": 0,
+    "T3": 0,
+    "T4": 0
+   }
+  }
+ },
+ "inconsistent": [
+  [
+   "T1-1",
+   "vector_rag",
+   [
+    "refused",
+    "uncited",
+    "uncited"
+   ]
+  ],
+  [
+   "T1-3",
+   "vector_rag",
+   [
+    "refused",
+    "uncited",
+    "refused"
+   ]
+  ],
+  [
+   "T1-5",
+   "text_to_sql",
+   [
+    "uncited",
+    "uncited",
+    "refused"
+   ]
+  ],
+  [
+   "T2-3",
+   "graphrag",
+   [
+    "refused",
+    "fail",
+    "refused"
+   ]
+  ],
+  [
+   "T3-2",
+   "text_to_sql",
+   [
+    "halluc",
+    "fail",
+    "refused"
+   ]
+  ],
+  [
+   "T3-3",
+   "text_to_sql",
+   [
+    "halluc",
+    "refused",
+    "refused"
+   ]
+  ],
+  [
+   "T3-5",
+   "text_to_sql",
+   [
+    "refused",
+    "uncited",
+    "uncited"
+   ]
+  ],
+  [
+   "T4-3",
+   "graphrag",
+   [
+    "pass",
+    "refused",
+    "pass"
+   ]
+  ],
+  [
+   "T4-4",
+   "text_to_sql",
+   [
+    "refused",
+    "pass",
+    "pass"
+   ]
+  ],
+  [
+   "T4-4",
+   "graphrag",
+   [
+    "refused",
+    "pass",
+    "refused"
+   ]
+  ]
+ ],
+ "grid": [
+  {
+   "id": "T1-1",
+   "type": "T1",
+   "text_to_sql": [
+    "uncited",
+    "uncited",
+    "uncited"
+   ],
+   "vector_rag": [
+    "refused",
+    "uncited",
+    "uncited"
+   ],
+   "graphrag": [
+    "pass",
+    "pass",
+    "pass"
+   ]
+  },
+  {
+   "id": "T1-2",
+   "type": "T1",
+   "text_to_sql": [
+    "uncited",
+    "uncited",
+    "uncited"
+   ],
+   "vector_rag": [
+    "pass",
+    "pass",
+    "pass"
+   ],
+   "graphrag": [
+    "pass",
+    "pass",
+    "pass"
+   ]
+  },
+  {
+   "id": "T1-3",
+   "type": "T1",
+   "text_to_sql": [
+    "uncited",
+    "uncited",
+    "uncited"
+   ],
+   "vector_rag": [
+    "refused",
+    "uncited",
+    "refused"
+   ],
+   "graphrag": [
+    "pass",
+    "pass",
+    "pass"
+   ]
+  },
+  {
+   "id": "T1-4",
+   "type": "T1",
+   "text_to_sql": [
+    "uncited",
+    "uncited",
+    "uncited"
+   ],
+   "vector_rag": [
+    "refused",
+    "refused",
+    "refused"
+   ],
+   "graphrag": [
+    "pass",
+    "pass",
+    "pass"
+   ]
+  },
+  {
+   "id": "T1-5",
+   "type": "T1",
+   "text_to_sql": [
+    "uncited",
+    "uncited",
+    "refused"
+   ],
+   "vector_rag": [
+    "uncited",
+    "uncited",
+    "uncited"
+   ],
+   "graphrag": [
+    "pass",
+    "pass",
+    "pass"
+   ]
+  },
+  {
+   "id": "T2-1",
+   "type": "T2",
+   "text_to_sql": [
+    "pass",
+    "pass",
+    "pass"
+   ],
+   "vector_rag": [
+    "refused",
+    "refused",
+    "refused"
+   ],
+   "graphrag": [
+    "fail",
+    "fail",
+    "fail"
+   ]
+  },
+  {
+   "id": "T2-2",
+   "type": "T2",
+   "text_to_sql": [
+    "pass",
+    "pass",
+    "pass"
+   ],
+   "vector_rag": [
+    "refused",
+    "refused",
+    "refused"
+   ],
+   "graphrag": [
+    "pass",
+    "pass",
+    "pass"
+   ]
+  },
+  {
+   "id": "T2-3",
+   "type": "T2",
+   "text_to_sql": [
+    "pass",
+    "pass",
+    "pass"
+   ],
+   "vector_rag": [
+    "refused",
+    "refused",
+    "refused"
+   ],
+   "graphrag": [
+    "refused",
+    "fail",
+    "refused"
+   ]
+  },
+  {
+   "id": "T2-4",
+   "type": "T2",
+   "text_to_sql": [
+    "pass",
+    "pass",
+    "pass"
+   ],
+   "vector_rag": [
+    "refused",
+    "refused",
+    "refused"
+   ],
+   "graphrag": [
+    "fail",
+    "fail",
+    "fail"
+   ]
+  },
+  {
+   "id": "T2-5",
+   "type": "T2",
+   "text_to_sql": [
+    "pass",
+    "pass",
+    "pass"
+   ],
+   "vector_rag": [
+    "refused",
+    "refused",
+    "refused"
+   ],
+   "graphrag": [
+    "pass",
+    "pass",
+    "pass"
+   ]
+  },
+  {
+   "id": "T3-1",
+   "type": "T3",
+   "text_to_sql": [
+    "refused",
+    "refused",
+    "refused"
+   ],
+   "vector_rag": [
+    "refused",
+    "refused",
+    "refused"
+   ],
+   "graphrag": [
+    "pass",
+    "pass",
+    "pass"
+   ]
+  },
+  {
+   "id": "T3-2",
+   "type": "T3",
+   "text_to_sql": [
+    "halluc",
+    "fail",
+    "refused"
+   ],
+   "vector_rag": [
+    "refused",
+    "refused",
+    "refused"
+   ],
+   "graphrag": [
+    "pass",
+    "pass",
+    "pass"
+   ]
+  },
+  {
+   "id": "T3-3",
+   "type": "T3",
+   "text_to_sql": [
+    "halluc",
+    "refused",
+    "refused"
+   ],
+   "vector_rag": [
+    "refused",
+    "refused",
+    "refused"
+   ],
+   "graphrag": [
+    "pass",
+    "pass",
+    "pass"
+   ]
+  },
+  {
+   "id": "T3-4",
+   "type": "T3",
+   "text_to_sql": [
+    "refused",
+    "refused",
+    "refused"
+   ],
+   "vector_rag": [
+    "refused",
+    "refused",
+    "refused"
+   ],
+   "graphrag": [
+    "pass",
+    "pass",
+    "pass"
+   ]
+  },
+  {
+   "id": "T3-5",
+   "type": "T3",
+   "text_to_sql": [
+    "refused",
+    "uncited",
+    "uncited"
+   ],
+   "vector_rag": [
+    "refused",
+    "refused",
+    "refused"
+   ],
+   "graphrag": [
+    "pass",
+    "pass",
+    "pass"
+   ]
+  },
+  {
+   "id": "T4-1",
+   "type": "T4",
+   "text_to_sql": [
+    "pass",
+    "pass",
+    "pass"
+   ],
+   "vector_rag": [
+    "refused",
+    "refused",
+    "refused"
+   ],
+   "graphrag": [
+    "pass",
+    "pass",
+    "pass"
+   ]
+  },
+  {
+   "id": "T4-2",
+   "type": "T4",
+   "text_to_sql": [
+    "pass",
+    "pass",
+    "pass"
+   ],
+   "vector_rag": [
+    "refused",
+    "refused",
+    "refused"
+   ],
+   "graphrag": [
+    "refused",
+    "refused",
+    "refused"
+   ]
+  },
+  {
+   "id": "T4-3",
+   "type": "T4",
+   "text_to_sql": [
+    "pass",
+    "pass",
+    "pass"
+   ],
+   "vector_rag": [
+    "refused",
+    "refused",
+    "refused"
+   ],
+   "graphrag": [
+    "pass",
+    "refused",
+    "pass"
+   ]
+  },
+  {
+   "id": "T4-4",
+   "type": "T4",
+   "text_to_sql": [
+    "refused",
+    "pass",
+    "pass"
+   ],
+   "vector_rag": [
+    "pass",
+    "pass",
+    "pass"
+   ],
+   "graphrag": [
+    "refused",
+    "pass",
+    "refused"
+   ]
+  },
+  {
+   "id": "T4-5",
+   "type": "T4",
+   "text_to_sql": [
+    "pass",
+    "pass",
+    "pass"
+   ],
+   "vector_rag": [
+    "pass",
+    "pass",
+    "pass"
+   ],
+   "graphrag": [
+    "pass",
+    "pass",
+    "pass"
+   ]
+  }
+ ],
+ "halluc": [
+  {
+   "qid": "T3-2",
+   "mode": "text_to_sql",
+   "trial": 0,
+   "forbidden": [
+    "Mondelez",
+    "Ternium"
+   ],
+   "answer_head": "Monica Lozano is an officer or director at five companies in the dataset. For each, the disclosed subsidiaries and 10-K cybersecurity risk summaries are:  1. **Apple Inc.** (CIK 320193) \u2014 Subsidiaries include Apple Asia Limited, Apple Canada Inc, Apple Computer Trading (Shanghai) Co., Ltd, Apple Dis"
+  },
+  {
+   "qid": "T3-3",
+   "mode": "text_to_sql",
+   "trial": 0,
+   "forbidden": [
+    "Hawthorn",
+    "Mission Produce",
+    "Core & Main",
+    "Scripps"
+   ],
+   "answer_head": "William Giles holds insider roles at 10 companies. For each, here are the disclosed subsidiaries and cyber risk summaries:  1. **BRINKER INTERNATIONAL, INC** (accession not cited in rows): Subsidiaries include BIPC Global Payroll Company, LLC; BIPC Investments, LLC; BIPC Management, LLC; Brinker Can"
+  }
+ ],
+ "killer": "T3-2",
+ "questions": [
+  {
+   "id": "T1-1",
+   "type": "T1",
+   "kind": "single-document semantic",
+   "expect": "vector RAG or GraphRAG",
+   "question": "What manufacturing and supply chain risks did Moderna, Inc. disclose in the risk factors of its 10-K?",
+   "valid": [
+    "0001682852-26-000033"
+   ],
+   "required": [
+    "Moderna"
+   ]
+  },
+  {
+   "id": "T1-2",
+   "type": "T1",
+   "kind": "single-document semantic",
+   "expect": "vector RAG or GraphRAG",
+   "question": "What supply chain and food safety risks did Yum China Holdings, Inc. disclose in the risk factors of its 10-K?",
+   "valid": [
+    "0001193125-26-082824"
+   ],
+   "required": [
+    "Yum China"
+   ]
+  },
+  {
+   "id": "T1-3",
+   "type": "T1",
+   "kind": "single-document semantic",
+   "expect": "vector RAG or GraphRAG",
+   "question": "What cybersecurity and data privacy risks did ROKU, INC disclose in the risk factors of its 10-K?",
+   "valid": [
+    "0001628280-26-008114"
+   ],
+   "required": [
+    "Roku"
+   ]
+  },
+  {
+   "id": "T1-4",
+   "type": "T1",
+   "kind": "single-document semantic",
+   "expect": "vector RAG or GraphRAG",
+   "question": "What cybersecurity and competition risks did SentinelOne, Inc. disclose in the risk factors of its 10-K?",
+   "valid": [
+    "0001583708-26-000020"
+   ],
+   "required": [
+    "SentinelOne"
+   ]
+  },
+  {
+   "id": "T1-5",
+   "type": "T1",
+   "kind": "single-document semantic",
+   "expect": "vector RAG or GraphRAG",
+   "question": "What regulatory and reimbursement risks did Privia Health Group, Inc. disclose in the risk factors of its 10-K?",
+   "valid": [
+    "0001759655-26-000010"
+   ],
+   "required": [
+    "Privia Health"
+   ]
+  },
+  {
+   "id": "T2-1",
+   "type": "T2",
+   "kind": "structured aggregation",
+   "expect": "text-to-SQL",
+   "question": "Which audit firm appears as the auditor for the most companies in this dataset, and how many distinct companies does it audit?",
+   "valid": [],
+   "required": [
+    "Ernst & Young"
+   ]
+  },
+  {
+   "id": "T2-2",
+   "type": "T2",
+   "kind": "structured aggregation",
+   "expect": "text-to-SQL",
+   "question": "Which company discloses the most subsidiaries in its EX-21 exhibit, and how many does it disclose?",
+   "valid": [],
+   "required": [
+    "Ventas"
+   ]
+  },
+  {
+   "id": "T2-3",
+   "type": "T2",
+   "kind": "structured aggregation",
+   "expect": "text-to-SQL",
+   "question": "What is the most common jurisdiction of incorporation among all disclosed subsidiaries, and how many subsidiaries are incorporated there?",
+   "valid": [],
+   "required": [
+    "Delaware"
+   ]
+  },
+  {
+   "id": "T2-4",
+   "type": "T2",
+   "kind": "structured aggregation",
+   "expect": "text-to-SQL",
+   "question": "Which SEC form type appears most often in this dataset, and how many filings of that type are there?",
+   "valid": [],
+   "required": [
+    "8-K"
+   ]
+  },
+  {
+   "id": "T2-5",
+   "type": "T2",
+   "kind": "structured aggregation",
+   "expect": "text-to-SQL",
+   "question": "Which issuer has the most distinct insiders filing Forms 3, 4 or 5 against it, and how many distinct insiders are there?",
+   "valid": [],
+   "required": [
+    "Medline"
+   ]
+  },
+  {
+   "id": "T3-1",
+   "type": "T3",
+   "kind": "multi-hop relational + text",
+   "expect": "GraphRAG",
+   "question": "Brian Wendling holds an insider role at more than one company in this dataset. For every company where they are an officer or director, list that company's disclosed subsidiaries and summarise the cybersecurity risks that company reported in its 10-K risk factors.",
+   "valid": [
+    "0001104659-26-010397",
+    "0001104659-26-013442",
+    "0001104659-26-020653",
+    "0001104659-26-020657",
+    "0001158172-26-000009"
+   ],
+   "required": [
+    "Comscore",
+    "Liberty Media",
+    "GCI Liberty"
+   ]
+  },
+  {
+   "id": "T3-2",
+   "type": "T3",
+   "kind": "multi-hop relational + text",
+   "expect": "GraphRAG",
+   "question": "Monica Lozano holds an insider role at more than one company in this dataset. For every company where they are an officer or director, list that company's disclosed subsidiaries and summarise the cybersecurity risks that company reported in its 10-K risk factors.",
+   "valid": [
+    "0000027419-26-000016",
+    "0000070858-26-000157",
+    "0000320193-25-000079"
+   ],
+   "required": [
+    "Apple",
+    "Bank of America",
+    "Target"
+   ]
+  },
+  {
+   "id": "T3-3",
+   "type": "T3",
+   "kind": "multi-hop relational + text",
+   "expect": "GraphRAG",
+   "question": "William Giles holds an insider role at more than one company in this dataset. For every company where they are an officer or director, list that company's disclosed subsidiaries and summarise the cybersecurity risks that company reported in its 10-K risk factors.",
+   "valid": [
+    "0000016918-26-000011",
+    "0000703351-26-000029",
+    "0001628280-26-009770"
+   ],
+   "required": [
+    "Constellation Brands",
+    "Brinker",
+    "Floor & Decor"
+   ]
+  },
+  {
+   "id": "T3-4",
+   "type": "T3",
+   "kind": "multi-hop relational + text",
+   "expect": "GraphRAG",
+   "question": "Judy Bruner holds an insider role at more than one company in this dataset. For every company where they are an officer or director, list that company's disclosed subsidiaries and summarise the cybersecurity risks that company reported in its 10-K risk factors.",
+   "valid": [
+    "0001137789-26-000159",
+    "0001628280-25-056742",
+    "0001628280-26-032873"
+   ],
+   "required": [
+    "Applied Materials",
+    "Seagate",
+    "Qorvo"
+   ]
+  },
+  {
+   "id": "T3-5",
+   "type": "T3",
+   "kind": "multi-hop relational + text",
+   "expect": "GraphRAG",
+   "question": "Gregg Sengstack holds an insider role at more than one company in this dataset. For every company where they are an officer or director, list that company's disclosed subsidiaries and summarise the cybersecurity risks that company reported in its 10-K risk factors.",
+   "valid": [
+    "0000038725-26-000009",
+    "0001193125-25-296204",
+    "0001350593-25-000066",
+    "0001579241-26-000007"
+   ],
+   "required": [
+    "Allegion",
+    "Woodward",
+    "Mueller Water"
+   ]
+  },
+  {
+   "id": "T4-1",
+   "type": "T4",
+   "kind": "cross-document entity resolution",
+   "expect": "GraphRAG",
+   "question": "Is \"American Airlines, Inc.\" listed as a subsidiary in another company's EX-21 exhibit while also being an SEC filer in its own right? If so, name the parent that lists it and confirm whether it files separately.",
+   "valid": [],
+   "required": [
+    "American Airlines Group"
+   ]
+  },
+  {
+   "id": "T4-2",
+   "type": "T4",
+   "kind": "cross-document entity resolution",
+   "expect": "GraphRAG",
+   "question": "Is \"AEP Texas Inc.\" listed as a subsidiary in another company's EX-21 exhibit while also being an SEC filer in its own right? If so, name the parent that lists it and confirm whether it files separately.",
+   "valid": [],
+   "required": [
+    "American Electric Power"
+   ]
+  },
+  {
+   "id": "T4-3",
+   "type": "T4",
+   "kind": "cross-document entity resolution",
+   "expect": "GraphRAG",
+   "question": "Is \"Athene Holding Ltd.\" listed as a subsidiary in another company's EX-21 exhibit while also being an SEC filer in its own right? If so, name the parent that lists it and confirm whether it files separately.",
+   "valid": [],
+   "required": [
+    "Apollo Global Management"
+   ]
+  },
+  {
+   "id": "T4-4",
+   "type": "T4",
+   "kind": "cross-document entity resolution",
+   "expect": "GraphRAG",
+   "question": "Is \"Alexander's, Inc.\" listed as a subsidiary in another company's EX-21 exhibit while also being an SEC filer in its own right? If so, name the parent that lists it and confirm whether it files separately.",
+   "valid": [],
+   "required": [
+    "Vornado Realty Trust"
+   ]
+  },
+  {
+   "id": "T4-5",
+   "type": "T4",
+   "kind": "cross-document entity resolution",
+   "expect": "GraphRAG",
+   "question": "Is \"AllianceBernstein Holding L.P.\" listed as a subsidiary in another company's EX-21 exhibit while also being an SEC filer in its own right? If so, name the parent that lists it and confirm whether it files separately.",
+   "valid": [],
+   "required": [
+    "AllianceBernstein L.P.|Equitable Holdings|AllianceBernstein Holding"
+   ]
+  }
+ ],
+ "resolution": {
+  "resolves_to_edges": 246,
+  "subsidiary_nodes": 200869,
+  "coverage_pct": 0.122
+ }
+}

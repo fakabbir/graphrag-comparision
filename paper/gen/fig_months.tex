@@ -1,0 +1,12 @@
+\begin{tikzpicture}
+\begin{axis}[
+  ybar, bar width=7pt, width=\linewidth, height=4.2cm,
+  symbolic x coords={{25-08},{25-09},{25-10},{25-11},{25-12},{26-01},{26-02},{26-03},{26-04},{26-05},{26-06},{26-07},{26-08}}, xtick=data,
+  x tick label style={rotate=45, anchor=east, font=\tiny},
+  ymin=0, ylabel={Filings with parsed documents}, ylabel near ticks,
+  axis lines*=left, tick style={draw=none}, ymajorgrids, grid style={gray!20},
+  enlarge x limits=0.05,
+]
+\addplot[fill=veccol] coordinates {({25-08},362) ({25-09},6581) ({25-10},8000) ({25-11},11776) ({25-12},11504) ({26-01},11513) ({26-02},15902) ({26-03},17934) ({26-04},16633) ({26-05},19594) ({26-06},15082) ({26-07},14050) ({26-08},18119)};
+\end{axis}
+\end{tikzpicture}

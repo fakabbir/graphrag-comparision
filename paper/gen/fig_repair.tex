@@ -1,0 +1,16 @@
+\begin{tikzpicture}
+\begin{axis}[
+  ybar, bar width=10pt, width=\linewidth, height=4.6cm,
+  symbolic x coords={T1,T2,T3,T4}, xtick=data,
+  ymin=0, ymax=16, ytick={0,5,10,15},
+  ylabel={Attempts needing repair (of 15)}, ylabel near ticks,
+  legend style={at={(0.5,1.25)}, anchor=north, legend columns=2, draw=none, font=\footnotesize},
+  nodes near coords, nodes near coords style={font=\tiny},
+  axis lines*=left, tick style={draw=none}, ymajorgrids, grid style={gray!20},
+  enlarge x limits=0.18,
+]
+\addplot[fill=sqlcol] coordinates {(T1,3) (T2,0) (T3,1) (T4,3)};
+\addplot[fill=graphcol] coordinates {(T1,4) (T2,9) (T3,6) (T4,15)};
+\legend{Text-to-SQL, GraphRAG}
+\end{axis}
+\end{tikzpicture}

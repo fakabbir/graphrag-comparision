@@ -1,0 +1,92 @@
+\section{Corpus Construction}
+\label{sec:dataset}
+
+\subsection{Source and document structure}
+
+The corpus is drawn from the U.S. Securities and Exchange Commission's EDGAR
+system \citep{sec2024edgar}, which publishes every mandatory disclosure filed by
+every U.S. public company. We ingested twelve monthly XBRL feeds labelled
+2025-09 through 2026-08. Filing dates in the resulting corpus span 2025-08 to
+2026-08, because a monthly feed includes filings dated at the end of the preceding
+month; \Cref{fig:months} shows the distribution, with the small 2025-08 bucket
+being that spillover.
+
+The structural point that motivates this paper is that an annual report is not one
+document. A Form 10-K is a container: a mandated sequence of numbered
+\emph{Items}, plus attached \emph{Exhibits}, filed under a single accession
+number. Three containers matter here.
+
+\textbf{Item 1A, Risk Factors}, is narrative prose in which a company enumerates
+what could go wrong. It is the longest narrative section, averaging 116{,}779
+characters and reaching 1{,}060{,}461 in this corpus (\Cref{tab:items}). It is the
+only section we embed.
+
+\textbf{Exhibit 21} is an attachment, not a section, required by Item 601(b)(21)
+of Regulation S-K. It lists subsidiaries and their jurisdiction of incorporation,
+so it parses into rows rather than prose. Two properties matter. First, the
+distribution is extremely skewed: 275 filers disclose a single subsidiary while
+62 disclose more than 500, and the largest discloses 2{,}780
+(\Cref{fig:subdist}). Second, and more consequentially,
+\emph{EX-21 is incomplete by design}: rule 601(b)(21)(ii) permits a filer to omit
+any subsidiary that is not a ``significant subsidiary''. The exhibit is therefore
+a floor on corporate structure and never a census, and the graph inherits that
+limit. An absent subsidiary is not evidence that none exists.
+
+\textbf{Forms 3, 4 and 5} are separate filings, not part of the 10-K. Officers,
+directors and ten-percent owners report their positions and transactions in
+structured XML. This is the container that makes identity resolvable, because each
+filing carries the insider's own Central Index Key (CIK) --- a stable SEC
+identifier. Two directors who share a surname are separable on CIK even though
+their names are not.
+
+\Cref{fig:containers} summarizes the arrangement and the measured disjointness
+that follows from it.
+
+\subsection{Ingestion}
+
+The pipeline runs in nine stages: fetch and parse the monthly feeds; fetch the
+documents each filing manifests; extract narrative Items from HTML; parse EX-21
+and the ownership forms; stage to object storage; load the relational store;
+embed; and build indexes and the graph projection. \Cref{fig:pipeline} gives the
+wall-clock breakdown, totalling roughly 252 minutes. Two stages dominate:
+document fetch (118 minutes) and embedding (87 minutes), together about 82\% of
+the total. The fetch cost is externally bounded --- EDGAR's fair-access policy
+caps automated requests at ten per second per requester
+\citep{sec2024edgar} --- so no amount of parallelism removes it.
+
+The filings manifest 1{,}904{,}128 documents in total. We fetched and parsed the
+10{,}592 that carry the narrative and exhibit content the benchmark needs,
+amounting to 19.7\,GB of raw HTML, which reduces to a 3{,}803\,MiB relational
+store plus a 1.0\,GB vector index. \Cref{tab:corpus} gives the resulting counts.
+
+\subsection{Schema}
+
+The relational store is PostgreSQL. Filings and companies are keyed by accession
+number and CIK. \texttt{filing\_section} holds one row per extracted Item with its
+text; \texttt{section\_chunk} holds the embedded chunks; \texttt{subsidiary} holds
+parsed EX-21 rows; \texttt{reporting\_owner} holds parsed ownership rows; and
+\texttt{filing\_auditor} holds auditor attestations.
+
+The graph is a projection of the same data, not a second source of truth. It holds
+430{,}257 nodes across five labels --- \texttt{Filing} (167{,}050),
+\texttt{Subsidiary} (200{,}869), \texttt{Person} (51{,}558), \texttt{Company}
+(10{,}511) and \texttt{AuditFirm} (269) --- and 561{,}144 edges across seven
+types: \texttt{:SUBSIDIARY\_OF} (212{,}124), \texttt{:FILED} (167{,}050),
+\texttt{:OFFICER\_OF} (86{,}180), \texttt{:DIRECTOR\_OF} (70{,}167),
+\texttt{:OWNS\_SHARES} (19{,}542), \texttt{:AUDITED\_BY} (5{,}835) and
+\texttt{:RESOLVES\_TO} (246).
+
+Two design decisions in that schema carry most of the paper's weight.
+
+\emph{Every edge carries the accession number of the filing that asserts it.}
+Provenance is a property of the relationship rather than of a document, which is
+what lets an answer cite the exact filing supporting each individual claim rather
+than the set of documents that were retrieved.
+
+\emph{\texttt{:RESOLVES\_TO} is the entity-resolution layer, and it is thin.}
+It links a subsidiary named in an EX-21 to a company that files in its own right,
+a fact no single document states. There are 246 such edges against 200{,}869
+subsidiary nodes --- a coverage of 0.12\% --- because EX-21 carries no CIK for a
+subsidiary, so the link must be established by name matching. We show in
+\Cref{sec:failures} that this thinness is a direct cause of the graph losing the
+one category built to exercise it.

@@ -1,0 +1,61 @@
+\begin{tikzpicture}[
+  font=\footnotesize,
+  >={Stealth[length=1.7mm,width=1.3mm]},
+  doc/.style={draw=gray!55, rounded corners=1.5pt, fill=white, align=center,
+              font=\scriptsize, inner sep=3pt, text width=3.9cm, minimum height=1.0cm},
+  emb/.style={doc, draw=veccol!70, fill=veccol!10, line width=0.7pt},
+  noemb/.style={doc, draw=warncol!75, fill=warncol!10, line width=0.7pt},
+  sep/.style={doc, draw=sqlcol!70, fill=sqlcol!10, line width=0.7pt},
+  wrap/.style={draw=gray!45, dashed, rounded corners=3pt, inner sep=6pt},
+  edge/.style={draw=graphcol!75, rounded corners=1.5pt, fill=graphcol!12,
+               align=center, font=\tiny, inner sep=2.5pt, text width=3.3cm,
+               minimum height=0.66cm, line width=0.6pt},
+  ann/.style={align=center, font=\tiny, text width=5.2cm, inner sep=1pt},
+  arr/.style={->, draw=gray!60, line width=0.5pt},
+]
+%% ── column 1: the containers, each annotated directly BELOW itself so that
+%%    nothing can collide with the boxes or the arrows leaving them ─────────
+\node[emb]   (i1a) at (0,0) {\textbf{Item 1A} Risk Factors\\[1pt]
+                             \tiny narrative prose, mean 116{,}779 chars};
+\node[ann, below=1.5mm of i1a] (a1)
+  {\textcolor{veccol}{\textbf{embedded}} $\rightarrow$ 508{,}714 chunks\\
+   \textcolor{gray!70}{the whole universe similarity search can reach}};
+
+\node[noemb, below=3.0mm of a1] (ex21) {\textbf{EX-21} Subsidiaries\\[1pt]
+                             \tiny structured list: name + jurisdiction};
+\node[ann, below=1.5mm of ex21] (a2)
+  {\textcolor{warncol}{\textbf{not embedded}} $\rightarrow$ 212{,}124 rows\\
+   \textcolor{gray!70}{a list does not benefit from an encoder}};
+
+\node[wrap, fit=(i1a)(a1)(ex21)(a2),
+      label={[font=\scriptsize\bfseries, text=gray!80, inner sep=2pt]above:%
+      10-K annual report \textmd{\tiny(one accession number)}}] (tenk) {};
+
+\node[sep, below=7mm of tenk.south] (f345) {\textbf{Form 3 / 4 / 5}\\[1pt]
+                             \tiny a different filing entirely};
+\node[ann, below=1.5mm of f345] (a3)
+  {\textcolor{sqlcol}{\textbf{not embedded}} $\rightarrow$ 150{,}917 rows\\
+   \textcolor{gray!70}{carries the CIK that separates people sharing a surname}};
+
+%% ── column 2: the graph projection ───────────────────────────────────────
+\node[edge] (e1) at (7.6,0.0)   {\texttt{:FILED}\\\tiny 167{,}050};
+\node[edge] (e2) at (7.6,-1.5)  {\texttt{:SUBSIDIARY\_OF}\\\tiny 212{,}124};
+\node[edge] (e3) at (7.6,-3.0)  {\texttt{:OFFICER\_OF} / \texttt{:DIRECTOR\_OF}\\\tiny 86{,}180 / 70{,}167};
+\node[wrap, draw=graphcol!55, fit=(e1)(e2)(e3),
+      label={[font=\scriptsize\bfseries, text=graphcol, inner sep=2pt]above:%
+      graph projection \textmd{\tiny(accession\_number on every edge)}}] (g) {};
+
+\draw[arr] (i1a.east)  -- ++(0.5,0) |- (e1.west);
+\draw[arr] (ex21.east) -- ++(0.5,0) |- (e2.west);
+\draw[arr] (f345.east) -- ++(0.5,0) |- (e3.west);
+
+%% ── the measured disjointness ────────────────────────────────────────────
+\node[draw=badcol!70, fill=badcol!8, line width=0.7pt, rounded corners=2pt,
+      align=left, font=\scriptsize, inner sep=5pt, text width=12.4cm,
+      anchor=north west] at ($(tenk.north west)+(0,-7.55)$)
+  {\textbf{Why no single chunk answers a multi-hop question.} Measured on this
+   corpus: the subject's surname appears in \textbf{0 of 5{,}210} Item~1A
+   sections, and only \textbf{1 of 151} subsidiary names appears anywhere in its
+   own parent's Item~1A. Role, ownership and risk are written in three containers
+   by three teams, so the combination exists in no retrievable passage.};
+\end{tikzpicture}

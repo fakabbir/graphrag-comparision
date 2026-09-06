@@ -1,0 +1,86 @@
+\section{Results}
+\label{sec:results}
+
+\Cref{tab:main} gives the headline numbers and \Cref{tab:bytype} the per-category
+breakdown. \Cref{fig:bytype} plots the latter and \Cref{tab:grid} shows every one
+of the 180 attempts individually, unaggregated.
+
+Summed over the question set, GraphRAG solved 14 of 20 questions on all three
+attempts and passed 45 of 60 attempts; text-to-SQL solved 9 and passed 29; vector
+RAG solved 3 and passed 9. These totals weight four hand-chosen categories
+equally and GraphRAG lost two of the four, so the aggregate is a property of this
+question mix rather than an overall ranking of the architectures. The per-category
+results are the informative ones.
+
+\subsection{By category}
+
+\textbf{T1, single-document semantic.} GraphRAG passed 15 of 15. Vector RAG, the
+expected winner, passed 3 of 15 --- all three from a single question --- with 6
+refusals and 6 answers that named the right company and the right risks but cited
+no filing. Text-to-SQL passed 0 of 15 despite reaching the correct text in 14
+attempts: its generated queries used full-text ranking to find the passage but did
+not select the accession number, so the answers were right and unciteable. This is
+the clearest demonstration that provenance is a separate capability from
+retrieval.
+
+\textbf{T2, structured aggregation.} Text-to-SQL passed 15 of 15, as predicted.
+GraphRAG passed 6 of 15, solving 2 of 5 questions, with 7 attempts returning wrong
+answers and 2 refusing. Vector RAG passed 0 of 15 and refused all fifteen times,
+which is the correct behaviour: an aggregate over 10{,}511 companies is not
+present in any eight retrieved chunks, and the arm said so rather than guessing.
+
+\textbf{T3, multi-hop relational plus text.} GraphRAG passed 15 of 15; both
+baselines passed 0 of 15. This is the category the design targets and the result
+is unambiguous. Text-to-SQL produced the benchmark's only two falsehoods here.
+
+\textbf{T4, cross-document entity resolution.} Written for the graph, and the
+graph came second. Text-to-SQL passed 14 of 15 and solved 4 of 5 questions;
+GraphRAG passed 9 of 15 and solved 2 of 5 with 2 more solved inconsistently, its
+6 misses all refusals rather than errors; vector RAG passed 6 of 15.
+
+\subsection{Outcome composition}
+
+\Cref{fig:outcomes} decomposes all 60 attempts per arm. The composition matters as
+much as the pass rate, because the failure modes are not interchangeable.
+
+Vector RAG refused 45 times. That is a low score but a benign failure: asked about
+a company whose chunks it could not find, it generally said the excerpts did not
+contain the answer rather than answering about whichever company did surface.
+Text-to-SQL was uncited 16 times --- right, and unverifiable. GraphRAG was never
+uncited, which follows from its construction: the traversal returns accession
+numbers before any text is read, so every claim arrives with a key attached.
+
+Only \textbf{2 of the 180 attempts} asserted something verifiably false, both
+text-to-SQL on T3.
+
+\subsection{Cost and latency}
+
+\Cref{fig:cost} plots tokens against attempts passed. GraphRAG consumed
+780{,}500 tokens to text-to-SQL's 158{,}171 and vector RAG's 118{,}850 --- about
+17{,}300 tokens per passing attempt against 5{,}450 and 13{,}200 respectively. Its
+accuracy is bought, not free. The extreme case is T2, where GraphRAG spent
+590{,}453 tokens against text-to-SQL's 24{,}604: roughly 24 times the cost for
+40\% of the accuracy, on the category it was expected to lose.
+
+The reverse cost is larger and easier to overlook. \Cref{fig:latency} plots mean
+latency on a log scale. Text-to-SQL averaged 25.3\,s overall against GraphRAG's
+5.9\,s and vector RAG's 1.6\,s, but the overall mean hides the shape: on T3 it
+averaged 92\,s and its worst single attempt took 445\,s. The cause is not the
+model but the SQL --- the generated queries join \texttt{subsidiary},
+\texttt{filing\_section} and \texttt{reporting\_owner} without narrowing first.
+Unbounded, LLM-authored SQL is a cost risk against one's own warehouse
+independently of whether the answer is correct.
+
+\subsection{Repair usage}
+
+\Cref{tab:repair} and \Cref{fig:repair} report how often each arm used its single
+repair allowance. GraphRAG triggered a repair on 34 of 60 attempts against
+text-to-SQL's 7 --- nearly five times as often --- and on T4 it needed one on
+\emph{all fifteen} attempts. Vector RAG has no query to repair and used none.
+
+This asymmetry accounts for much of the token gap, and it should temper the
+reading of GraphRAG's wins: writing correct Cypher against this schema was harder
+for the model than writing correct SQL, and the graph arm leaned on its second
+chance far more heavily. As noted in \Cref{sec:design}, the zero-row trigger is
+also not neutral between the two languages, and the direction of that bias favours
+the graph.

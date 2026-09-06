@@ -1,0 +1,105 @@
+\section{System Architecture}
+\label{sec:arch}
+
+Three retrieval arms answer the same question over the same stores.
+\Cref{fig:arch} shows all three.
+
+\subsection{Text-to-SQL}
+
+The model is shown the complete relational schema, including the
+\texttt{subsidiary} and \texttt{reporting\_owner} tables, and writes a SQL query;
+the query is executed; the resulting rows are given back to the model, which
+writes the answer. Two LLM calls.
+
+This is deliberately a strong baseline rather than a straw man. Because the schema
+is complete, every multi-hop answer in the benchmark \emph{is} reachable by joins.
+What the model must do unaided is choose the join path, decode a multi-valued
+relationship string, and recognize that traversing an ownership chain of unknown
+depth requires a recursive CTE. The schema documentation also states the
+surname-first convention used for person names --- an asymmetry in an earlier
+iteration, where only the graph documentation mentioned it, is recorded among the
+harness defects in \Cref{sec:repro}.
+
+\subsection{Vector RAG}
+
+The question is embedded and the $k{=}8$ nearest chunks are retrieved by cosine
+similarity from an HNSW index \citep{malkov2018hnsw,pgvector2024}; the chunks are
+given to the model, which answers. One LLM call, and no query language, therefore
+no repair path.
+
+The encoder is \texttt{all-MiniLM-L6-v2}, a six-layer 22.7M-parameter model
+distilled in the MiniLM family \citep{wang2020minilm} and trained as a sentence
+encoder \citep{reimers2019sbert}. It emits 384 dimensions with mean pooling and
+$L^2$ normalization, so cosine similarity reduces to a dot product.
+
+One configuration detail is load-bearing. The encoder accepts 256 word-pieces,
+roughly a thousand characters, while Item 1A averages 116{,}779 characters. The
+section therefore cannot be embedded whole: text is chunked at 1{,}400 characters
+with 200 characters of overlap, so a single risk-factor section becomes on the
+order of a hundred vectors, and 5{,}210 sections become 508{,}714 chunks. We
+embed only Item 1A. That is not a handicap imposed on the baseline but the
+opposite --- it is the only section any benchmark question asks about, so
+restricting the index concentrates the candidate pool and makes the vector arm
+\emph{stronger} than it would be with all seven Items embedded.
+
+\subsection{GraphRAG}
+
+Two LLM calls, as with text-to-SQL, but the work between them is split
+differently.
+
+\begin{enumerate}
+  \item \textbf{Identify.} The model writes a Cypher query whose job is to
+        determine \emph{which entities} the question concerns --- typically
+        resolving a person to a CIK and finding the companies where they hold a
+        role, with their relevant filings.
+  \item \textbf{Expand (deterministic).} The system, not the model, expands each
+        identified entity: for every company returned, fetch its subsidiaries and
+        its risk-factor filings.
+  \item \textbf{Fetch text by key.} The accession numbers from the traversal are
+        used to select section text by primary key, and windows of $\pm 900$
+        characters around matched terms are extracted, at most three per filing.
+        This is a lookup, not a search: the graph has already decided which
+        documents are in scope, so there is nothing to rank and nothing to miss.
+  \item \textbf{Answer.} The model receives the graph facts and the exact
+        passages, and writes the answer with citations.
+\end{enumerate}
+
+Stage 2 being system-authored rather than LLM-authored is the design's central
+claim, and it is a response to a measured failure rather than an aesthetic
+preference. An LLM writing a single query over a fan-out join will attach a
+\texttt{LIMIT}, and one entity's hundreds of child rows then consume the entire
+budget --- after which the model reports, fluently and wrongly, that the other
+entities have no subsidiaries or do not exist. Splitting identification from
+expansion makes that class of error structurally impossible rather than something
+to be prompted against.
+
+\subsection{Shared guardrails}
+
+The same failure threatens both query languages, so the same two transforms are
+applied to both, identically. Any trailing \texttt{LIMIT} in a generated query is
+raised to 2{,}000 rows before execution; the result set is then balanced to at
+most 6 rows per entity and 48 rows overall, where the entity column is detected by
+name. Applying these to SQL and Cypher alike means the comparison measures
+retrieval architecture rather than which prompt happened to dodge the trap.
+
+Both query-writing arms also get exactly one repair attempt, triggered when a
+query raises an exception or returns zero rows: the model sees the error text and
+rewrites once. There is no second repair. \Cref{sec:results} shows the two arms
+used this allowance very unequally.
+
+\subsection{Model access}
+
+All three arms call a single OpenAI-compatible endpoint provided by Bifrost, an
+open-source LLM gateway, which routes to DeepSeek or to AWS Bedrock. The
+benchmarked configuration is \texttt{deepseek-v4-flash} at temperature 0 with
+reasoning disabled, 700 output tokens for query generation and 1{,}500 for
+answers.
+
+Routing through one endpoint is a methodological device, not a convenience. It
+makes ``all three arms used the same model with the same settings'' a structural
+property of the deployment rather than a convention maintained by discipline: the
+model is a request parameter read from one place by all three arms. It also makes
+the cross-model probe in \Cref{sec:failures} a configuration change rather than a
+code change. Reasoning was disabled because an uncapped reasoning trace consumed
+roughly 33{,}000 completion tokens per call, which \texttt{max\_tokens} does not
+bound; the setting is identical for every arm, so the comparison is unaffected.

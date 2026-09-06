@@ -1,0 +1,9 @@
+\begin{tabular}{@{}llp{0.44\linewidth}@{}}
+\toprule
+\textbf{Model} & \textbf{Verdict} & \textbf{Observed behaviour} \\
+\midrule
+DeepSeek V4 Flash (benchmarked) & pass    & correct three-company traversal \\
+Claude Haiku 4.5 (Bedrock)      & fail    & stage-1 Cypher returned \textsc{target corp} alone; Apple and Bank of America missing \\
+Amazon Nova 2 Lite (Bedrock)    & refused & produced no usable traversal \\
+\bottomrule
+\end{tabular}

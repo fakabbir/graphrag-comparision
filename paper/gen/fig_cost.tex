@@ -1,0 +1,19 @@
+\begin{tikzpicture}
+\begin{axis}[
+  width=\linewidth, height=5.4cm,
+  xlabel={Total tokens consumed (thousands)}, ylabel={Attempts passed (of 60)},
+  ylabel near ticks, xlabel near ticks,
+  xmin=0, xmax=900, ymin=0, ymax=56,
+  axis lines*=left, tick style={draw=none}, grid=both, grid style={gray!20},
+]
+\addplot[only marks, mark=*, mark size=2.9pt, sqlcol] coordinates {(158.2,29)};
+\addplot[only marks, mark=*, mark size=2.9pt, veccol] coordinates {(118.8,9)};
+\addplot[only marks, mark=*, mark size=2.9pt, graphcol] coordinates {(780.5,45)};
+\node[anchor=north west, align=left, font=\scriptsize, inner sep=1pt, xshift=3mm]
+  at (axis cs:158.2,29) {\textbf{Text-to-SQL}\\\tiny 5,454 tok/pass};
+\node[anchor=south west, align=left, font=\scriptsize, inner sep=1pt, xshift=3mm]
+  at (axis cs:118.8,9) {\textbf{Vector RAG}\\\tiny 13,205 tok/pass};
+\node[anchor=north east, align=right, font=\scriptsize, inner sep=1pt, xshift=-3mm]
+  at (axis cs:780.5,45) {\textbf{GraphRAG}\\\tiny 17,344 tok/pass};
+\end{axis}
+\end{tikzpicture}

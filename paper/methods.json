@@ -1,0 +1,156 @@
+{
+ "model": {
+  "name": "deepseek-v4-flash",
+  "temperature": 0.0,
+  "reasoning_effort": "none",
+  "max_tokens_query": 700,
+  "max_tokens_answer": 1500,
+  "timeout_s": 180,
+  "client_retries": 2,
+  "note": "reasoning disabled after an uncapped trace burned ~33k completion tokens per call"
+ },
+ "embedding": {
+  "model": "all-MiniLM-L6-v2",
+  "dims": 384,
+  "max_seq_length": 256,
+  "chunk_chars": 1400,
+  "overlap_chars": 200,
+  "batch": 256,
+  "items_embedded": [
+   "1A"
+  ],
+  "normalized": true,
+  "pooling": "mean",
+  "layers": 6,
+  "params_m": 22.7,
+  "disk_mb": 88
+ },
+ "stores": {
+  "postgres": "PostgreSQL 17 + pgvector 0.8.2 (HNSW, vector_cosine_ops) + pg_trgm + GIN tsvector",
+  "graph": "Neo4j 5.26 Community + APOC",
+  "hnsw_iterative_scan": "relaxed_order",
+  "pg_statement_timeout_ms": 45000
+ },
+ "arms": {
+  "text_to_sql": {
+   "llm_calls": 2,
+   "stages": [
+    "LLM writes SQL from the full schema",
+    "execute",
+    "LLM answers from rows"
+   ],
+   "schema_given": "complete, including subsidiary and reporting_owner",
+   "repair": "one retry on exception or zero rows"
+  },
+  "vector_rag": {
+   "llm_calls": 1,
+   "stages": [
+    "embed question",
+    "HNSW cosine top-k",
+    "LLM answers from chunks"
+   ],
+   "top_k": 8,
+   "repair": "none \u2014 no query language to repair"
+  },
+  "graphrag": {
+   "llm_calls": 2,
+   "stages": [
+    "LLM writes stage-1 Cypher to identify entities",
+    "system deterministically expands each entity (not LLM-authored)",
+    "exact text fetch by accession_number primary key",
+    "LLM answers from graph facts + snippets"
+   ],
+   "repair": "one retry on exception or zero rows",
+   "snippet_window_chars": 900,
+   "max_hits_per_filing": 3
+  }
+ },
+ "guardrails": {
+  "raise_limit_cap": 2000,
+  "balance_per_entity": 6,
+  "balance_total": 48,
+  "applied_to": "SQL and Cypher identically",
+  "why": "a generated LIMIT on a fan-out join lets one entity consume the budget and the model then reports the others do not exist"
+ },
+ "scoring": {
+  "judge": "programmatic, no LLM judge",
+  "pass_requires": [
+   "entity_recall == 1.0",
+   "at least one required keyword present",
+   "no forbidden entity named",
+   "at least one correct citation where ground-truth citations exist"
+  ],
+  "labels": [
+   "pass",
+   "halluc",
+   "uncited",
+   "refused",
+   "fail"
+  ],
+  "halluc_def": "not correct and not refused and (a forbidden entity named or a citation outside the valid set)",
+  "uncited_def": "required entities and keywords present, nothing false, but no correct citation",
+  "refusal_detection": "regex over the answer text"
+ },
+ "fairness": [
+  "same model, temperature, reasoning setting and max_tokens for all arms",
+  "equal LLM call budget: 2 for SQL and GraphRAG, 1 for vector RAG",
+  "complete schema shown to text-to-SQL so multi-hop answers are reachable by joins",
+  "the surname-first name convention documented in BOTH schema docs",
+  "one repair attempt for both query-writing arms",
+  "identical LIMIT/fan-out guardrail on both query languages",
+  "two of four question types chosen so the graph is the wrong tool"
+ ],
+ "gateway": {
+  "software": "Bifrost v2 (open source LLM gateway)",
+  "protocol": "OpenAI-compatible /v1/chat/completions",
+  "providers": [
+   "deepseek (API key)",
+   "AWS Bedrock (EC2 instance profile, no static credentials)"
+  ],
+  "models_offered": 8,
+  "cross_model_probe_T3_2_graphrag": {
+   "deepseek/deepseek-v4-flash": "pass",
+   "bedrock/claude-haiku-4-5": "fail \u2014 Cypher returned TARGET CORP alone, missing Apple and Bank of America",
+   "bedrock/amazon.nova-2-lite": "refused"
+  }
+ },
+ "infra": {
+  "region": "ap-south-1",
+  "app_host": "EC2 m7g.xlarge (4 vCPU, 16 GB, Graviton)",
+  "db": "RDS db.t4g.medium, 100 GB gp3",
+  "cdn": "CloudFront (TLS termination)",
+  "nat_gateway": "none \u2014 S3 gateway VPC endpoint",
+  "monthly_usd": {
+   "ec2": 85.12,
+   "rds": 61.32,
+   "rds_storage": 9.12,
+   "ec2_storage": 9.12,
+   "s3_cloudfront": 0.5,
+   "total": 165
+  },
+  "embed_host_during_load": "m7g.4xlarge (16 vCPU) at 97 chunks/s"
+ },
+ "harness_bugs_found": [
+  "the SQL schema doc omitted the surname-first convention the graph doc included \u2014 an asymmetry that made text-to-SQL fail for the wrong reason",
+  "a use-before-assignment scored text-to-SQL 0/12 for an entire run",
+  "the citation scorer penalised legitimate citations on aggregate questions with no ground-truth citation set",
+  "a 900-token answer cap truncated answers mid-citation, converting passes into uncited",
+  "pgvector post-filtering returned 0 of 8 rows while 164 matched until hnsw.iterative_scan was enabled \u2014 vector RAG had been scored on an empty retriever",
+  "concurrent torch encode() segfaulted the interpreter; a shared psycopg connection interleaved cursors across threads",
+  "a global token counter attributed every thread's tokens to whichever mode read it first",
+  "T4-5 ground truth accepted one of three filers that genuinely list AllianceBernstein Holding L.P.; all three arms were naming a real parent and being marked wrong. Corrected and all 180 answers re-scored offline: text-to-SQL 28->29, vector RAG 6->9, GraphRAG 44->45"
+ ],
+ "disjointness": {
+  "lozano_in_item1a_sections": 0,
+  "item1a_sections_total": 5210,
+  "subsidiary_names_in_parent_item1a": 1,
+  "subsidiary_names_checked": 151,
+  "distinct_lozanos": 3,
+  "note": "the three facts a multi-hop question needs live in three document types"
+ },
+ "sql_pathology": {
+  "t3_mean_s": 92,
+  "t3_max_s": 445,
+  "cause": "joins subsidiary x filing_section x reporting_owner without narrowing first"
+ }
+}

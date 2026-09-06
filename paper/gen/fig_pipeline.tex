@@ -1,0 +1,12 @@
+\begin{tikzpicture}
+\begin{axis}[
+  xbar, bar width=7pt, width=0.74\linewidth, height=6.0cm,
+  symbolic y coords={{HNSW + graph},{embed 508,714 chunks},{load RDS},{upload to S3},{extract HTML},{Form 3/4/5},{fetch 10,592 docs},{parse 12 feeds},{fetch feeds}}, ytick=data,
+  xmin=0, xmax=132, xlabel={Wall-clock minutes}, xlabel near ticks,
+  axis lines*=left, tick style={draw=none}, xmajorgrids, grid style={gray!20},
+  nodes near coords, nodes near coords style={font=\tiny}, enlarge y limits=0.09,
+  y tick label style={font=\footnotesize},
+]
+\addplot[fill=graphcol] coordinates {(4.00,{HNSW + graph}) (87.00,{embed 508,714 chunks}) (6.00,{load RDS}) (12.00,{upload to S3}) (19.00,{extract HTML}) (0.40,{Form 3/4/5}) (118.00,{fetch 10,592 docs}) (4.20,{parse 12 feeds}) (0.90,{fetch feeds})};
+\end{axis}
+\end{tikzpicture}

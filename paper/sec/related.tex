@@ -1,0 +1,53 @@
+\section{Related Work}
+\label{sec:related}
+
+\textbf{Retrieval-augmented generation.} Grounding a generator in retrieved
+passages was formalized by \citet{lewis2020rag} and rests on dense retrieval
+\citep{karpukhin2020dpr} and sentence-level encoders \citep{reimers2019sbert}.
+The literature since is large \citep{gao2023ragsurvey}, and much of it optimizes
+the ranking step: better encoders, rerankers, hybrid sparse-dense scoring, query
+rewriting. Our negative result on similarity search is orthogonal to that line of
+work. We do not claim the retriever ranked badly; we claim that on questions whose
+answer spans documents, no ranking of passages can return evidence that no passage
+contains, and that entity membership is not a property the embedding encodes.
+
+\textbf{Structured querying as a baseline.} Translating questions into executable
+queries has its own long line, from \citet{zhong2017seq2sql} to the cross-domain
+Spider benchmark \citep{yu2018spider}. We treat text-to-SQL not as a competitor to
+be defeated but as the strongest available baseline, and we give it the complete
+schema including the tables that make the multi-hop answers reachable by joins.
+This matters for the interpretation of our results: text-to-SQL wins one of the
+four categories outright and beats our graph implementation in a second.
+
+\textbf{Knowledge graphs and graph-based retrieval.} Knowledge graphs
+\citep{hogan2021kg} predate the current interest, and ``GraphRAG'' is now an
+overloaded label \citep{peng2024graphragsurvey}. The best-known formulation
+\citep{edge2024graphrag} builds a community structure over an LLM-extracted graph
+and is aimed at query-focused summarization --- global questions such as ``what
+are the themes in this corpus''. Our design targets a different shape. The graph
+is built from filing metadata and structured exhibits rather than by LLM
+extraction; the traversal resolves \emph{which entities} are in scope, and the
+answer text is then fetched by primary key from the relational store rather than
+summarized from the graph. Only the first hop is LLM-authored; expansion is
+deterministic, for reasons we quantify in \Cref{sec:failures}.
+
+\textbf{Multi-hop question answering.} HotpotQA \citep{ho2020hotpotqa} and MuSiQue
+\citep{trivedi2022musique} established multi-hop evaluation, generally over
+Wikipedia, where the hops are between topically related articles and entity names
+are largely unambiguous. Our corpus differs in the property that drives our main
+result: entity \emph{identity} is genuinely ambiguous. Three distinct people in
+this corpus share the surname of our featured subject, and only a stable
+identifier separates them. A benchmark where names resolve cleanly cannot expose
+the failure mode we observe.
+
+\textbf{Evaluation.} Automated RAG evaluation increasingly uses an LLM judge
+\citep{es2024ragas}. We deliberately do not, because the object under study is
+whether a system states falsehoods, and hallucination in the judge
+\citep{ji2023hallucination} would be indistinguishable from hallucination in the
+system. Our scoring is a deterministic function of required entities, forbidden
+entities, keyword presence and citation correctness (\Cref{sec:design}). This
+buys reproducibility at the cost of rewarding only the answers we anticipated.
+
+Finally, we position this paper honestly: it is a single-corpus empirical study
+whose value is in its measurements and its diagnosed failures, not in a new
+retrieval algorithm.

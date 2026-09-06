@@ -1,0 +1,24 @@
+Enterprise document corpora routinely store facts about the same entity in
+different document types, written by different teams at different times. We ask
+whether a knowledge graph keyed on stable entity identifiers retrieves such facts
+better than similarity search over embeddings, and we measure the answer rather
+than assert it. Our corpus is one snapshot of SEC EDGAR \citep{sec2024edgar}:
+167{,}050 filings from 10{,}511 companies, 508{,}714 embedded chunks of
+risk-factor text, and a graph of 430{,}257 nodes and 561{,}144 edges carrying an
+accession number on every edge. Three architectures --- text-to-SQL over typed
+columns, dense-vector RAG with HNSW cosine search
+\citep{lewis2020rag,malkov2018hnsw}, and a two-stage GraphRAG design --- share one
+model, temperature and token budget, and are scored by a programmatic judge over
+20 questions in four categories, each asked three times, for 180 scored attempts.
+GraphRAG solved 14 of 20 questions on all three attempts to text-to-SQL's 9 and
+vector RAG's 3. Two results contradict the pre-registered expectation. Vector RAG
+lost the single-document category it was expected to win, passing 3 of 15 attempts
+where GraphRAG passed 15 of 15. Text-to-SQL beat GraphRAG on cross-document entity
+resolution, 14 of 15 attempts against 9 of 15, in a category written for the
+graph. GraphRAG also lost structured aggregation as predicted, 6 of 15 against
+15 of 15, at 24 times the token cost. Only 2 of the 180 attempts asserted
+something verifiably false, both text-to-SQL conflating distinct people who share
+a surname. We conclude that structural retrieval earns its ingestion and token
+cost on questions turning on identity or on joins across documents, and not
+otherwise; we claim no advantage beyond this corpus, this model and this question
+set.

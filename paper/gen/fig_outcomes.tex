@@ -1,0 +1,17 @@
+\begin{tikzpicture}
+\begin{axis}[
+  ybar stacked, bar width=26pt, width=\linewidth, height=5.2cm,
+  symbolic x coords={{Text-to-SQL},{Vector RAG},{GraphRAG}}, xtick=data,
+  ymin=0, ymax=61, ylabel={Attempts (of 60)}, ylabel near ticks,
+  legend style={at={(0.5,1.22)}, anchor=north, legend columns=5, draw=none, font=\tiny},
+  axis lines*=left, tick style={draw=none}, ymajorgrids, grid style={gray!20},
+  enlarge x limits=0.28, x tick label style={font=\footnotesize},
+]
+\addplot[fill=okcol] coordinates {({Text-to-SQL},29) ({Vector RAG},9) ({GraphRAG},45)};
+\addplot[fill=badcol] coordinates {({Text-to-SQL},2) ({Vector RAG},0) ({GraphRAG},0)};
+\addplot[fill=warncol] coordinates {({Text-to-SQL},16) ({Vector RAG},6) ({GraphRAG},0)};
+\addplot[fill=gray!45] coordinates {({Text-to-SQL},12) ({Vector RAG},45) ({GraphRAG},8)};
+\addplot[fill=gray!20] coordinates {({Text-to-SQL},1) ({Vector RAG},0) ({GraphRAG},7)};
+\legend{pass, falsehood, uncited, refused, other fail}
+\end{axis}
+\end{tikzpicture}

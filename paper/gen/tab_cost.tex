@@ -1,0 +1,14 @@
+\begin{tabular}{@{}llr@{}}
+\toprule
+\textbf{Resource} & \textbf{Specification} & \textbf{USD/mo} \\
+\midrule
+EC2 (app, graph, gateway) & m7g.xlarge, 4 vCPU / 16\,GB & 85.12 \\
+EC2 storage               & 100\,GB gp3                 & 9.12 \\
+RDS PostgreSQL            & db.t4g.medium               & 61.32 \\
+RDS storage               & 100\,GB gp3                 & 9.12 \\
+S3 + CloudFront           & demo volume                 & 0.50 \\
+NAT gateway               & not used (S3 VPC endpoint)  & 0.00 \\
+\midrule
+\textbf{Total}            &                             & \textbf{165} \\
+\bottomrule
+\end{tabular}

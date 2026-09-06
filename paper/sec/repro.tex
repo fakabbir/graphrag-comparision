@@ -1,0 +1,79 @@
+\section{Reproducibility and Engineering Cost}
+\label{sec:repro}
+
+\subsection{Software and infrastructure}
+
+Both relational and vector retrieval run on PostgreSQL 17 with pgvector 0.8.2
+\citep{pgvector2024}, using an HNSW index over \texttt{vector\_cosine\_ops}
+\citep{malkov2018hnsw} alongside \texttt{pg\_trgm} and a GIN \texttt{tsvector}
+index. \texttt{hnsw.iterative\_scan} is set to \texttt{relaxed\_order} for reasons
+given below. The graph is Neo4j 5.26 Community with APOC \citep{neo4j2024}.
+Embeddings come from \texttt{all-MiniLM-L6-v2} at 384 dimensions with a 256
+word-piece limit, chunked at 1{,}400 characters with 200 of overlap, batch size
+256. Generated SQL and Cypher execute under a 45-second statement timeout.
+
+The deployment is a single application host --- an AWS \texttt{m7g.xlarge}, 4 vCPU
+and 16\,GB, running the graph, the API and the gateway --- with PostgreSQL on a
+\texttt{db.t4g.medium} instance and CloudFront terminating TLS. There is no NAT
+gateway; object-store access goes through a VPC endpoint. \Cref{tab:cost} gives
+the monthly cost at roughly \$165. The embedding pass was run on a temporarily
+resized 16-vCPU host at 97 chunks/s and the instance was then scaled back.
+
+Ingestion takes about 252 minutes end to end (\Cref{fig:pipeline}), of which
+document fetch and embedding are about 82\%. The fetch component is bounded
+externally by EDGAR's ten-requests-per-second fair-access policy
+\citep{sec2024edgar} and cannot be parallelized away.
+
+\subsection{Defects found in the measurement harness}
+
+We record these because an unaudited benchmark harness is itself a leading source
+of confident wrong conclusions. Each of the following would have produced a
+publishable-looking but incorrect result. Seven were found before the reported
+numbers were generated; the eighth was found afterwards and fixed by re-scoring
+the stored answers.
+
+\begin{enumerate}
+  \item \textbf{Asymmetric schema documentation.} The SQL schema description
+        omitted the surname-first name convention that the graph description
+        included. Text-to-SQL was failing for a reason that had nothing to do with
+        its architecture.
+  \item \textbf{An empty retriever.} pgvector applies a \texttt{WHERE} filter
+        after the HNSW walk selects candidates, so a selective filter returned 0
+        of 8 rows while 164 matched. Vector RAG was being scored on a retriever
+        that returned nothing. Fixed by enabling iterative scan.
+  \item \textbf{A use-before-assignment} scored text-to-SQL 0 out of 12 for an
+        entire run.
+  \item \textbf{A citation scorer that punished correct provenance.} On aggregate
+        questions with no ground-truth citation set, any cited accession was
+        counted as wrong, mis-labelling correct answers as falsehoods.
+  \item \textbf{A truncating answer cap.} A 900-token limit cut answers
+        mid-citation, converting passes into uncited.
+  \item \textbf{Thread-unsafe measurement.} Concurrent encoder calls segfaulted
+        the interpreter; a shared database connection interleaved cursors across
+        threads.
+  \item \textbf{A global token counter} attributed every thread's tokens to
+        whichever arm read it first, so the reported per-arm cost was wrong.
+  \item \textbf{A ground-truth error, found after the fact.} One T4 question
+        accepted a single expected parent where the loaded data contains three
+        filers that genuinely list the subsidiary. All three arms were naming a
+        real parent and being scored wrong. Because the model answers were stored,
+        correcting the ground truth and re-scoring cost no additional inference:
+        text-to-SQL moved 28$\rightarrow$29, vector RAG 6$\rightarrow$9 and
+        GraphRAG 44$\rightarrow$45.
+\end{enumerate}
+
+A ninth defect was found while preparing this paper and is not in the results
+above because it never entered them: a stale statistics export recorded
+\texttt{:RESOLVES\_TO} as 1{,}232 edges where the live graph holds 246. It was
+caught only because the per-type edge counts refused to sum to the graph's total
+--- an arithmetic identity that a dashboard does not check but a table in a paper
+does.
+
+\subsection{Artifacts}
+
+The ingestion pipeline, the three retrieval arms, the scoring harness, the
+question set with its ground truth, and the stored answers for all 180 attempts
+are retained, which is what made the re-scoring in item 8 possible without new
+inference. Every table and figure in this paper is generated programmatically from
+the stored results rather than transcribed, so the numbers in the prose and the
+numbers in the tables cannot drift apart.

@@ -1,0 +1,89 @@
+\section{Introduction}
+\label{sec:intro}
+
+Retrieval-augmented generation has become the default way to put a language model
+in front of a document corpus \citep{lewis2020rag,gao2023ragsurvey}. The standard
+recipe embeds passages, retrieves the nearest neighbours of an embedded question,
+and lets the model answer from what came back. It works well when the answer is
+contained in a passage that resembles the question.
+
+A large class of enterprise questions is not like that. Consider a question a
+financial analyst would actually ask: \emph{for every company where a particular
+person is an officer or director, list that company's disclosed subsidiaries and
+summarize the cybersecurity risks it reported.} Three facts are required. The
+person's role is disclosed in an insider-ownership filing. The subsidiaries are
+disclosed in an exhibit attached to the annual report. The risks are narrative
+prose inside a numbered section of that same report. These are three separate
+documents, in three formats, produced by three different processes.
+
+The difficulty is not that the passages are hard to rank. It is that no passage
+contains the combination. We measured this directly on our corpus: the surname of
+the subject of our hardest question appears in \textbf{0 of 5{,}210} extracted
+risk-factor sections, and only \textbf{1 of 151} subsidiary names appears anywhere
+in its own parent's risk-factor section. Ownership and risk are, empirically,
+disjoint. \Cref{fig:containers} shows the structure that produces this.
+
+This has a consequence that is easy to state and easy to overlook: a better
+encoder cannot fix it, and neither can a longer context window. Retrieval can
+only return text that exists. If the conjunction of facts a question needs is
+never co-located in any passage, then ranking passages more accurately retrieves
+the same insufficient evidence. The ceiling is a property of the corpus, not of
+the retriever.
+
+There is a second and subtler failure. Similarity search has no mechanism for
+filtering by entity, because ``belongs to company $X$'' is not a semantic property
+of a passage. Two risk-factor sections about supply-chain disruption are near each
+other in embedding space whether or not they belong to the company being asked
+about. At small scale this rarely bites, because few candidates compete. We show
+that it bites hard at 508{,}714 chunks drawn from 5{,}210 filers, and --- more
+usefully --- that it bites on exactly the questions where similarity search is
+supposed to be the right tool.
+
+The obvious alternative is to store the structure explicitly: resolve entities to
+stable identifiers, materialize the relationships as edges, and attach a
+provenance key to every edge so that any claim can be traced to the document that
+supports it. This is the family of designs now loosely called GraphRAG
+\citep{edge2024graphrag,peng2024graphragsurvey}. The question this paper addresses
+is not whether that is possible but whether it is \emph{worth it}, and on which
+question shapes --- measured against two baselines that were given every
+reasonable advantage.
+
+We are deliberately narrow. This is an empirical systems study on one corpus with
+one model and twenty questions. It contributes measurements and diagnosed failure
+modes, not a new algorithm. Our contributions are:
+
+\begin{itemize}
+  \item \textbf{A corpus and benchmark with hard entity identity.} Twelve monthly
+        EDGAR feeds ingested into a relational store and a graph
+        (\Cref{tab:corpus}), with 20 questions in four categories. The multi-hop
+        subjects were selected on measured evidence: the surname must appear in
+        \emph{zero} risk-factor sections and must be shared by two or more
+        distinct filer identifiers, so that resolving identity by name is
+        demonstrably wrong rather than merely inelegant
+        (\Cref{sec:design}).
+  \item \textbf{A matched three-way comparison.} 180 programmatically scored
+        attempts under one model at temperature 0, with the fan-out guardrail and
+        repair policy applied identically to both query-writing arms
+        (\Cref{sec:arch}), and with two of the four categories chosen so that the
+        graph should lose.
+  \item \textbf{Two results that contradict our expectation.} Vector RAG lost the
+        category it was expected to win, and plain text-to-SQL beat GraphRAG on
+        cross-document entity resolution. We report both with the same prominence
+        as the wins and diagnose each (\Cref{sec:failures}).
+  \item \textbf{A cost accounting.} GraphRAG's accuracy is bought:
+        780{,}500 tokens against text-to-SQL's 158{,}171, and a repair call
+        triggered on 34 of 60 attempts against 7 of 60
+        (\Cref{tab:main}, \Cref{tab:repair}). We also report the reverse cost ---
+        text-to-SQL's generated joins averaged 92\,s and peaked at 445\,s on the
+        multi-hop category.
+  \item \textbf{Eight defects found in the measurement harness itself.} Each
+        would have produced a confident and wrong conclusion had it gone
+        unnoticed, including one ground-truth error found after the results were
+        first computed (\Cref{sec:repro}). We argue that an unaudited benchmark
+        harness is itself a leading source of false findings.
+\end{itemize}
+
+\Cref{sec:related} places the work; \Cref{sec:dataset} and \Cref{sec:arch}
+describe the corpus and the three architectures; \Cref{sec:design} gives the
+protocol; \Cref{sec:results} reports what happened; \Cref{sec:failures} explains
+the failures; \Cref{sec:threats} states what these measurements cannot support.

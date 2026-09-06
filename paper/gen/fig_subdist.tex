@@ -1,0 +1,12 @@
+\begin{tikzpicture}
+\begin{axis}[
+  ybar, bar width=15pt, width=\linewidth, height=4.4cm,
+  symbolic x coords={{1},{2-5},{6-20},{21-100},{101-500},{500+}}, xtick=data,
+  ymin=0, ylabel={Filers}, ylabel near ticks,
+  xlabel={Subsidiaries disclosed in EX-21}, xlabel near ticks,
+  axis lines*=left, tick style={draw=none}, ymajorgrids, grid style={gray!20},
+  nodes near coords, nodes near coords style={font=\tiny}, enlarge x limits=0.13,
+]
+\addplot[fill=graphcol] coordinates {({1},275) ({2-5},950) ({6-20},1261) ({21-100},1079) ({101-500},439) ({500+},62)};
+\end{axis}
+\end{tikzpicture}

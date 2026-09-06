@@ -1,0 +1,112 @@
+\section{Failure Analysis}
+\label{sec:failures}
+
+The failures are the most informative part of this study, and two of them
+contradict what we expected before running it.
+
+\subsection{Vector RAG lost the category it was expected to win}
+
+T1 asks what one named company disclosed about one topic in its risk factors. The
+answer is entirely inside a single document, retrieval is a ranking problem, and
+similarity search should be at its best. It passed 3 of 15 attempts, all from one
+question.
+
+The mechanism is visible in the retrieved set. Asked what manufacturing and
+supply-chain risks \emph{Moderna} disclosed, the top-8 chunks came from Entegris,
+Hayward Holdings, Open Text, Arrowhead Pharmaceuticals and NVIDIA. Every one of
+those chunks genuinely discusses supply-chain risk. The retriever did what it was
+asked. The problem is that ``belongs to Moderna'' is not a property the embedding
+encodes, so the company name in the question cannot outweigh topical similarity
+across 508{,}714 chunks drawn from 5{,}210 filers.
+
+The decisive detail is that \textbf{this question passed on a single month of
+filings}. The failure appeared when the corpus grew. It is therefore a
+scale-induced limitation of entity filtering by similarity, not a tuning error, and
+it is the strongest argument in this paper for structural retrieval --- and one we
+did not anticipate.
+
+We are careful about the boundary of this claim. This experiment cannot fully
+separate ``embeddings cannot filter by entity'' from ``this retriever
+configuration cannot'', because the 1{,}400-character chunks exceed the encoder's
+256-token window and $k$ was fixed at 8. A hybrid retriever with a metadata filter
+on CIK would very likely fix T1 --- which is precisely the point, since a metadata
+filter on a stable identifier \emph{is} structural retrieval, arriving by another
+route.
+
+\subsection{Plain SQL beat GraphRAG at entity resolution}
+
+T4 was written for the graph and text-to-SQL won it, 14 of 15 attempts against 9
+of 15, and 4 of 5 questions against 2 of 5. GraphRAG's six misses were all
+refusals; it never asserted anything false.
+
+Two causes compound. The first is schema thinness. The \texttt{:RESOLVES\_TO}
+layer, which is exactly the relation T4 interrogates, holds 246 edges against
+200{,}869 subsidiary nodes --- 0.12\% coverage. EX-21 carries no CIK for a
+subsidiary, so establishing that a listed subsidiary is itself a filer requires
+name matching, and we did little of it. The graph was asked a question its
+weakest layer supports.
+
+The second is a normalization mismatch. The loader canonicalizes subsidiary names
+by stripping corporate suffixes, so \emph{AEP Texas Inc.} is stored as
+\texttt{aep texas}. The model, seeing the name as written in the question, produced
+Cypher matching \verb|nameNormalized: 'aep texas inc'|, which returns zero rows;
+the repair attempt frequently missed as well, and that question scored 0 of 3.
+Postgres won the same question because \verb|ILIKE '%aep texas%'| is forgiving in
+a way an exact property match is not.
+
+The lesson generalizes beyond this bug: a normalized join key is a liability when
+the query author cannot see the normalization. It is also a caution about
+attributing architecture-level conclusions to implementation defects. We did not
+re-run the arm with the normalization repaired, so this is a diagnosis rather than
+a measured result, and the honest reading is that T4 tests our implementation more
+than it tests the graph model.
+
+\subsection{GraphRAG lost aggregation, as predicted}
+
+Text-to-SQL scored 15 of 15 on T2 and GraphRAG 6 of 15. Unlike the previous two,
+this outcome was expected --- T2 exists in the benchmark precisely because a
+traversal should add nothing to a \texttt{GROUP BY} --- but the manner of the loss
+is instructive.
+
+Asked for the most common jurisdiction of incorporation among all disclosed
+subsidiaries, the generated Cypher grouped by company rather than by jurisdiction,
+returned per-company counts, and the model reported Delaware with 2{,}415
+subsidiaries. Delaware is the right answer; 2{,}415 is one company's count rather
+than the 62{,}504 across the corpus. Right entity, wrong aggregate. The answer
+also attached 190 accession numbers to a question that needs none.
+
+For counting over typed columns the graph adds no information and the extra hop
+adds a place to go wrong, at 24 times the token cost.
+
+\subsection{The only two falsehoods were surname collisions}
+
+Two of the 180 attempts stated something verifiably false, both text-to-SQL on T3,
+and both are the same failure. Asked about \emph{Monica Lozano}, the model reported
+five companies including Mondelez and Ternium; those belong to Mariano and
+Santiago Lozano, different people who share a surname. Asked about
+\emph{William Giles}, it reported ten companies.
+
+The SQL was not malformed and the model was fluent and confident. It matched on
+name because name is what the question supplied and what the text contains. This
+is the exact failure that resolving identity to a CIK before reading any text
+prevents structurally: GraphRAG passed all three attempts on the same question,
+keyed on CIK, and the other Lozanos never entered its result set.
+
+It is worth stating the counterfactual plainly. Of the three attempts text-to-SQL
+made on that question, one was this falsehood, one was an ordinary fail and one was
+an honest refusal. A single-attempt evaluation had a two-in-three chance of not
+seeing it.
+
+\subsection{The verdict is model-sensitive}
+
+Because all arms route through one gateway (\Cref{sec:arch}), we probed the same
+GraphRAG pipeline on other models. \Cref{tab:crossmodel} reports the featured
+multi-hop question: the benchmarked model passes, Claude Haiku 4.5 fails because
+its stage-1 Cypher collapsed to a single company and missed two others, and Amazon
+Nova 2 Lite refuses.
+
+This is a probe and not a measurement --- one question, one attempt each, no
+re-scoring of the full set --- and we draw only the negative conclusion it
+supports: a single-model benchmark bounds what can be claimed. The architecture
+constrains what evidence reaches the model, but the model still has to write a
+correct traversal, and not all of them do.
