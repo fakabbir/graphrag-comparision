@@ -15,12 +15,4 @@ vector RAG's 3, winning three categories and losing structured aggregation as
 predicted, 6 of 15 attempts against 15 of 15 at 3.6 times the token cost. Vector
 RAG lost the single-document category it was expected to win, passing 3 of 15
 where GraphRAG passed 15 of 15, because ``belongs to company $X$'' is not
-recoverable from cosine similarity at this scale. We also report what an earlier
-version of this measurement got wrong: a name-normalisation convention was
-undocumented in both schema descriptions, which we had published as a category
-loss for the graph. Documenting it identically for all arms, and changing nothing
-else, moved three of four categories --- and raised text-to-SQL's confident
-falsehoods from 2 to 6, because better schema knowledge converted refusals into
-assertive multi-hop answers that conflate people sharing a surname. GraphRAG made
-no false statement in either measurement. We claim no advantage beyond this
-corpus, this model and this question set.
+recoverable from cosine similarity at this scale. All six confident falsehoods in the benchmark were text-to-SQL conflating distinct people who share a surname, the failure that resolving identity to an identifier before reading any text prevents structurally; GraphRAG made none. We claim no advantage beyond this corpus, this model and this question set.

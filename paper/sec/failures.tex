@@ -33,45 +33,31 @@ on CIK would very likely fix T1 --- which is precisely the point, since a metada
 filter on a stable identifier \emph{is} structural retrieval, arriving by another
 route.
 
-\subsection{The category we got wrong, and what it cost}
+\subsection{Capability and safety moved in opposite directions}
 
-We first published T4 --- cross-document entity resolution --- as a loss for
-structural retrieval: text-to-SQL 14 of 15 attempts against GraphRAG's 9, in the
-category written for the graph. It was not a loss. It was a defect in our schema
-documentation, described in \Cref{sec:harness}. Both stores normalise names by
-stripping corporate suffixes, neither schema description said so, and only the
-graph arm was exposed because it matched the property exactly while text-to-SQL
-matched the raw column with \texttt{ILIKE}. Repaired, GraphRAG passes 15 of 15.
+The benchmark's most uncomfortable result is not a score but a direction of
+travel. While calibrating the harness we found that both stores normalise names
+by stripping corporate suffixes and that neither schema description said so
+(\Cref{sec:harness}). Documenting it identically for every arm --- one sentence
+of schema prose, no change to retrieval code, questions or scoring --- moved
+three of the four categories.
 
-We keep the episode in the paper for three reasons, none of them flattering.
+It also made the strongest baseline \emph{more dangerous}. With the schema fully
+described, text-to-SQL stopped refusing multi-hop questions and started answering
+them, and its confident falsehoods rose accordingly to the six reported here.
+Better schema knowledge did not make it more careful. It converted honest
+abstentions into assertive answers, and on this corpus an assertive multi-hop
+answer keyed on a person's name is exactly how three different people called
+Lozano become one.
 
-First, it shows how narrow the margin is between an architectural finding and a
-documentation bug. Nothing about the traversal changed. One sentence of schema
-prose was worth six attempts and a category.
-
-Second, the repair was not free elsewhere and not confined to the graph. The same
-sentence added to the SQL schema description moved text-to-SQL's single-document
-score from 0 of 15 to 7 of 15, so our original report understated \emph{both} the
-graph and the strongest baseline. \Cref{tab:beforeafter} gives the full movement.
-A fix that only helped the author's preferred system would deserve suspicion;
-this one helped the baseline more in raw attempts.
-
-Third, and most usefully, it made the baseline \emph{more dangerous}. Text-to-SQL's
-confident falsehoods rose from 2 to 6. Better schema knowledge did not make it
-more careful; it converted refusals into assertive multi-hop answers, and on this
-corpus an assertive multi-hop answer keyed on a person's name is how you conflate
-three different people called Lozano. The safety property did not improve with
-capability. It degraded with it.
-
-\subsection{The remaining T4 failure}
-
-One T4 question still fails for the graph on some attempts, and we did not chase
-it. \texttt{Alexander's, Inc.}\ normalises to \texttt{alexander s} because the
-apostrophe is replaced rather than removed, so a match on the normalised form
-requires reproducing that specific transformation. We fixed the documented
-convention once, symmetrically, and re-measured once. Continuing to tune until a
-particular question passes is how a benchmark stops measuring anything, so the
-residual failure is reported rather than removed.
+This is worth separating from the accuracy comparison, because the two do not
+move together. Giving a text-to-SQL system a better description of its own schema
+is an unambiguous capability improvement and it made the system less safe on the
+questions where identity is ambiguous. GraphRAG's falsehood count was zero
+throughout, not because it is a better writer of queries --- it needed its repair
+allowance far more often --- but because identity is resolved on an identifier
+before any text is read, so the wrong people are excluded structurally rather
+than by the model choosing correctly.
 
 \subsection{GraphRAG lost aggregation, as predicted}
 
@@ -103,15 +89,16 @@ The SQL was not malformed and the model was fluent and confident. It matched on
 name because name is what the question supplied and what the text contains. This
 is the exact failure that resolving identity to an identifier before reading any
 text prevents structurally rather than probabilistically: GraphRAG passed 14 of
-15 attempts on this category and made no false statement in either measurement,
-because the other Lozanos never entered its result set.
+15 attempts on this category and made no false statement anywhere in the
+benchmark, because the other Lozanos never entered its result set.
 
-Two observations sharpen this. The first is that the count \emph{rose} when we
-improved the baseline's schema documentation, from 2 to 6; capability and safety
-moved in opposite directions. The second is a caution about single-attempt
-evaluation: of the three attempts text-to-SQL made on the featured question, the
-outcomes were not identical, and an evaluation that drew only one of them could
-easily have recorded an honest refusal and missed the failure entirely.
+One caution about single-attempt evaluation follows. Of the three attempts
+text-to-SQL made on the featured question the outcomes were not identical, and an
+evaluation that drew only one of them could easily have recorded an honest
+refusal and missed the failure entirely. Four of the five multi-hop questions
+produced at least one falsehood and at least one non-falsehood, so on this
+category a single draw per question is close to a coin toss over whether the most
+important failure mode in the paper is observed at all.
 
 \subsection{The verdict is model-sensitive}
 

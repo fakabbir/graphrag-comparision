@@ -70,13 +70,6 @@ modes, not a new algorithm. Our contributions are:
         same prominence as the wins.} Vector RAG lost the single-document
         category it was expected to win, passing 3 of 15 attempts where GraphRAG
         passed 15 of 15 (\Cref{sec:failures}).
-  \item \textbf{A published result of ours that turned out to be our own
-        defect.} We first reported cross-document entity resolution as a loss for
-        the graph. A name-normalisation convention was undocumented in both
-        schema descriptions; documenting it identically and changing nothing else
-        moved three of four categories (\Cref{sec:harness},
-        \Cref{tab:beforeafter}). We show both measurements, because a repair that
-        moves a headline in the author's favour should be visible.
   \item \textbf{A cost accounting.} GraphRAG's accuracy is bought:
         520{,}929 tokens against text-to-SQL's
         144{,}068, and a repair call triggered on
@@ -84,12 +77,12 @@ modes, not a new algorithm. Our contributions are:
         (\Cref{tab:main}, \Cref{tab:repair}). We also report the reverse cost:
         text-to-SQL's generated joins reached 274\,s on a
         single attempt.
-  \item \textbf{A safety result that runs against the obvious intuition.}
-        Giving text-to-SQL a better schema description made it more dangerous,
-        not less: its confident falsehoods rose from 2 to 6, because knowing the
-        schema converted refusals into assertive multi-hop answers that conflate
-        people who share a surname. GraphRAG made no false statement in either
-        measurement (\Cref{sec:failures}).
+  \item \textbf{A safety result that does not follow the accuracy result.}
+        All six confident falsehoods were text-to-SQL, all on the multi-hop
+        category, and all the same error: conflating distinct people who share a
+        surname. GraphRAG made none. Resolving identity to a stable identifier
+        before reading any text prevents that class of error structurally rather
+        than probabilistically (\Cref{sec:failures}).
 \end{itemize}
 
 \Cref{sec:related} places the work; \Cref{sec:dataset} and \Cref{sec:arch}

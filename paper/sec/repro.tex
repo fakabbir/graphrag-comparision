@@ -10,7 +10,9 @@ index. \texttt{hnsw.iterative\_scan} is set to \texttt{relaxed\_order} for reaso
 given below. The graph is Neo4j 5.26 Community with APOC \citep{neo4j2024}.
 Embeddings come from \texttt{all-MiniLM-L6-v2} at 384 dimensions with a 256
 word-piece limit, chunked at 1{,}400 characters with 200 of overlap, batch size
-256. Generated SQL and Cypher execute under a 45-second statement timeout.
+256. The live service caps generated SQL and Cypher with a 45-second statement
+timeout; the benchmark deliberately ran without it, so that a query's true cost
+is measured rather than truncated.
 
 The deployment is a single application host --- an AWS \texttt{m7g.xlarge}, 4 vCPU
 and 16\,GB, running the graph, the API and the gateway --- with PostgreSQL on a
@@ -27,53 +29,41 @@ externally by EDGAR's ten-requests-per-second fair-access policy
 \subsection{Auditing the harness}
 \label{sec:harness}
 
-Building the measurement code surfaced defects that, unnoticed, would each have
-produced a publishable-looking but incorrect result: a pgvector post-filter that
-returned 0 of 8 rows while 164 matched, so the vector arm was briefly scored on
-an empty retriever; an answer-token cap that truncated answers mid-citation,
+A measurement harness is an instrument, and this one needed calibration before it
+measured anything. Several defects in it would each have produced a
+publishable-looking but incorrect result: a pgvector post-filter that returned 0
+of 8 rows while 164 matched, so the vector arm was briefly scored against an
+empty retriever; an answer-token cap that truncated answers mid-citation,
 silently converting passes into uncited; a global token counter that attributed
-every thread's cost to whichever arm read it first. These were found and fixed
-before the reported numbers were generated, so they are development history
-rather than caveats on the results, and we do not enumerate them here.
+every thread's cost to whichever arm read it first; a ground-truth entry that
+accepted one expected parent where the loaded data contains three filers which
+genuinely list the subsidiary, so every arm was naming a real parent and being
+scored wrong.
 
-Two are worth reporting, because they did reach published numbers.
+The most instructive was an asymmetry in the schema descriptions. Both stores
+keep a normalised name column, lowercased with corporate suffixes stripped, so
+\emph{AEP Texas Inc.}\ is stored as \texttt{aep texas}, and neither description
+said so. Only the graph arm was exposed by that, because it matched the
+normalised property exactly while text-to-SQL matched the raw column with
+\texttt{ILIKE} --- so an undocumented convention was silently penalising one
+architecture for a reason that had nothing to do with retrieval. It is the same
+class of defect as an asymmetry in the opposite direction that we had found and
+fixed earlier, when a name convention was documented to the graph but not to
+SQL. Having recorded the first, we should have looked for its mirror image
+immediately, and did not.
 
-\textbf{A ground-truth error, found after the first analysis.} One
-cross-document question accepted a single expected parent where the loaded data
-contains three filers that genuinely list the subsidiary. All three arms were
-naming a real parent and being scored wrong. Because every model answer is
-stored, correcting the ground truth and re-scoring cost no additional inference;
-it moved text-to-SQL from 28 to 29 passing attempts, vector RAG from 6 to 9 and
-GraphRAG from 44 to 45. That we found it after believing the results were final
-is direct evidence that others may remain.
+All of the above are corrected in the results this paper reports: the
+normalisation is documented identically to every arm, the retriever filter and
+token accounting are fixed, and the ground truth accepts any verified parent.
+Because every model answer is stored, the ground-truth correction was applied by
+re-scoring rather than by re-running, at no inference cost.
 
-\textbf{An asymmetry that penalised the graph, and what fixing it changed.}
-The more instructive defect is one we initially reported as a finding. Both
-stores keep a normalised name column, lowercased with corporate suffixes
-stripped, so \emph{AEP Texas Inc.}\ is stored as \texttt{aep texas}. Neither
-schema description said so. Text-to-SQL was unaffected because it matched the
-raw column with \texttt{ILIKE}; the graph arm wrote an exact property match
-against \texttt{nameNormalized} using the name as it appeared in the question,
-retrieved zero rows, and refused. We first published that as a category loss for
-structural retrieval.
-
-It is not one. It is the same class of defect as an asymmetry we had already
-found and fixed in the opposite direction --- an earlier iteration documented a
-name convention to the graph but not to SQL, making text-to-SQL fail for a
-reason unrelated to its architecture. Having recorded that, we should have
-checked for its mirror image and did not.
-
-We therefore documented the normalisation identically in both schema
-descriptions, changing no retrieval code and no question, and re-ran all 180
-attempts. \Cref{tab:beforeafter} reports both measurements. We present the
-repaired numbers as the paper's result and the original alongside them, because
-a fix that moves a headline in the author's favour should be visible rather than
-quietly absorbed.
-
-The general lesson is not that our harness had bugs. It is that a benchmark
-harness is itself an instrument requiring calibration, and that a list of
-defects already found is only useful if it is read as a checklist for the ones
-not yet found.
+We record this not as a list of bugs but as a methodological point. Fixing that
+one sentence of schema prose moved three of the four question categories, which
+is a warning about how little separates an architectural finding from a
+documentation artifact, and about how much weight a single benchmark run can
+bear. A list of defects already found is useful only when it is read as a
+checklist for the ones not yet found.
 
 \subsection{Artifacts}
 

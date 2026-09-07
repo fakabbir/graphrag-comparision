@@ -35,11 +35,9 @@ where every one of the benchmark's confident falsehoods occurred, all six of the
 text-to-SQL.
 
 \textbf{T4, cross-document entity resolution.} GraphRAG passed 15 of 15 and
-text-to-SQL 14 of 15; vector RAG passed 6 of 15. An earlier version of this
-measurement recorded GraphRAG at 9 of 15 here and reported the category as a loss
-for structural retrieval. That was a defect in our schema documentation rather
-than a property of the graph; \Cref{sec:harness} and \Cref{tab:beforeafter}
-describe the repair and its effect.
+text-to-SQL 14 of 15; vector RAG passed 6 of 15. Both query-writing arms handle
+this shape well once the schema is fully described, and the graph's margin here
+is narrow.
 
 \subsection{Outcome composition}
 

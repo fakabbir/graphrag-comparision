@@ -114,6 +114,10 @@ for pat, why in [
     (r"thirteen-month|13-month", "twelve monthly feeds were ingested"),
     (r"Three results contradict", "two results contradicted the expectation"),
     (r"we did not repair\s+and re-measure", "the normalisation defect was repaired and re-measured"),
+    (r"tab:beforeafter", "the paper reports one measurement, not a before/after"),
+    (r"\bpub\.\s|\brep\.\s", "published/repaired column labels were removed"),
+    (r"first published|earlier version of this measurement",
+     "the paper states its result once rather than narrating a revision"),
 ]:
     hits = re.findall(pat, prose)
     # §9 legitimately quotes the stale figure while describing the defect

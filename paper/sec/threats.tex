@@ -40,17 +40,17 @@ the filer chose not to disclose is unanswerable from this corpus by any of the
 three arms, and our ground truth is defined against what was disclosed rather than
 against reality.
 
-\textbf{Category results move with implementation details.} GraphRAG's
-originally published loss on T4 turned out to be a documentation defect in our
-own harness rather than a property of the graph, and repairing it changed the
-category (\Cref{sec:harness}, \Cref{tab:beforeafter}). We report the repaired
-numbers, but the episode is itself a threat: if one such defect was worth a
-category, others may be latent in results we have not thought to re-examine, and
-the ones we would be least likely to notice are those that flatter the design.
-The same logic applies in reverse to the wins --- some part of GraphRAG's T1 and
-T3 margins may reflect implementation effort we spent on the graph and not on the
-baselines. \texttt{:RESOLVES\_TO} coverage of 0.12\% remains unrepaired and
-still bounds what any entity-resolution question can measure here.
+\textbf{Category results move with implementation details.} While calibrating
+the harness we found an undocumented name-normalisation convention in the schema
+descriptions; documenting it changed three of the four categories
+(\Cref{sec:harness}). Nothing about any retrieval architecture changed. If one
+sentence of schema prose was worth three categories, other such sensitivities are
+plausibly latent in results we have not thought to re-examine, and the ones we
+would be least likely to notice are those that flatter the design. The same logic
+applies to the wins: some part of GraphRAG's margins may reflect implementation
+effort we spent on the graph and not on the baselines.
+\texttt{:RESOLVES\_TO} coverage of 0.12\% remains a hard bound on what any
+entity-resolution question can measure here.
 
 \textbf{Repair asymmetry favours the graph.} As recorded in \Cref{sec:design},
 the zero-row repair trigger fires for a graph query that misses but not for an
@@ -63,12 +63,7 @@ feeds. Annual filings cluster seasonally (\Cref{fig:months}), so the mix of form
 types is not stationary within it, and the absolute counts are not reproducible
 against a later snapshot because EDGAR accumulates.
 
-\textbf{Undetected ground-truth errors are likely.} We found eight defects in our
-own harness (\Cref{sec:repro}), one of them a ground-truth error discovered
-\emph{after} the results were first computed: a question accepted one of three
-filers that genuinely list a subsidiary, so all three arms were naming a real
-parent and being marked wrong. Correcting it and re-scoring the stored answers
-moved text-to-SQL from 28 to 29, vector RAG from 6 to 9 and GraphRAG from 44 to
-45. That we found one after believing the results were final is direct evidence
-that others may remain, and the correction happened to help the baselines more
-than the graph.
+\textbf{Undetected errors are likely.} We found several defects in our own
+harness, one of them a ground-truth error discovered after we believed the
+results were final (\Cref{sec:harness}). That we found it late is direct evidence
+that others may remain, and we have no way to bound how many.

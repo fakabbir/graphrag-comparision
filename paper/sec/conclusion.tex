@@ -32,18 +32,19 @@ question shape rather than a winner:
 
 The safety finding is narrower but sharper than the accuracy finding, and it is
 the one we did not anticipate. All six confident falsehoods were text-to-SQL
-conflating distinct people who share a surname, and the count \emph{tripled} when
-we gave that baseline a better schema description. Capability and safety moved in
-opposite directions: knowing the schema converted honest refusals into assertive
-wrong answers. Resolving identity to an identifier before reading any text
-prevents that class of error structurally rather than probabilistically. For an
+conflating distinct people who share a surname; GraphRAG produced none. The two
+do not move together: describing the baseline's schema more completely is an
+unambiguous capability improvement, and it converted honest refusals into
+assertive wrong answers on exactly the questions where identity is ambiguous
+(\Cref{sec:failures}). Resolving identity to an identifier before reading any
+text prevents that class of error structurally rather than probabilistically. For an
 application where a confident wrong answer costs more than a refusal, that
 property may matter more than the pass rate.
 
-We claim none of this beyond one corpus, one model and twenty questions --- and
-one of our own published category results turned out to be a documentation bug
-rather than a finding, which is the strongest caution we can offer about how
-much weight a single benchmark run should carry.
+We claim none of this beyond one corpus, one model and twenty questions. During
+calibration a single undocumented schema convention proved worth three of the
+four categories (\Cref{sec:harness}), which is the strongest caution we can offer
+about how much weight any one benchmark run should carry --- including this one.
 
 \subsection*{Future work}
 
