@@ -1,0 +1,18 @@
+\begin{tabular}{@{}l cc cc cc@{}}
+\toprule
+& \multicolumn{2}{c}{\textbf{Text-to-SQL}} & \multicolumn{2}{c}{\textbf{Vector RAG}} & \multicolumn{2}{c}{\textbf{GraphRAG}} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}
+& pub. & rep. & pub. & rep. & pub. & rep. \\
+\midrule
+Questions solved (of 20) & 9 & \textbf{10}~\textcolor{okcol}{$\uparrow$} & 3 & \textcolor{gray!60}{--} & 14 & \textbf{16}~\textcolor{okcol}{$\uparrow$} \\
+Attempts passed (of 60) & 29 & \textbf{36}~\textcolor{okcol}{$\uparrow$} & 9 & \textcolor{gray!60}{--} & 45 & \textbf{50}~\textcolor{okcol}{$\uparrow$} \\
+Confident falsehoods & 2 & \textbf{6}~\textcolor{badcol}{$\uparrow$} & 0 & \textcolor{gray!60}{--} & 0 & \textcolor{gray!60}{--} \\
+Correct but uncited & 16 & \textbf{10}~\textcolor{okcol}{$\downarrow$} & 6 & \textbf{12}~\textcolor{badcol}{$\uparrow$} & 0 & \textcolor{gray!60}{--} \\
+Total tokens (thousands) & 158 & \textbf{144}~\textcolor{okcol}{$\downarrow$} & 119 & \textbf{118}~\textcolor{okcol}{$\downarrow$} & 780 & \textbf{521}~\textcolor{okcol}{$\downarrow$} \\
+\midrule
+T1 attempts (of 15) & 0 & \textbf{7}~\textcolor{okcol}{$\uparrow$} & 3 & \textcolor{gray!60}{--} & 15 & \textcolor{gray!60}{--} \\
+T2 attempts (of 15) & 15 & \textcolor{gray!60}{--} & 0 & \textcolor{gray!60}{--} & 6 & \textcolor{gray!60}{--} \\
+T3 attempts (of 15) & 0 & \textcolor{gray!60}{--} & 0 & \textcolor{gray!60}{--} & 15 & \textbf{14}~\textcolor{badcol}{$\downarrow$} \\
+T4 attempts (of 15) & 14 & \textcolor{gray!60}{--} & 6 & \textcolor{gray!60}{--} & 9 & \textbf{15}~\textcolor{okcol}{$\uparrow$} \\
+\bottomrule
+\end{tabular}

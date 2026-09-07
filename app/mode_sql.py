@@ -35,6 +35,12 @@ SCHEMA = textwrap.dedent("""
     subsidiary(accession_number FK, parent_cik, subsidiary_name, name_normalized,
                jurisdiction)
       -- parsed from EX-21 exhibits. Subsidiaries have NO cik.
+      -- subsidiary_name is verbatim as filed: 'AEP Texas Inc.', 'Alexander''s, Inc.'
+      -- name_normalized is lowercased AND HAS CORPORATE SUFFIXES REMOVED, so
+      --   'AEP Texas Inc.' is stored as 'aep texas' and 'Athene Holding Ltd.' as
+      --   'athene holding'. Inc/Corp/Ltd/LLC/LP/PLC/Co/Holdings-style suffixes and
+      --   all punctuation are stripped. Never equate name_normalized to a name
+      --   copied from the question; use subsidiary_name ILIKE '%aep texas%'.
 
     reporting_owner(accession_number, owner_cik, owner_name, issuer_cik, issuer_name,
                     relationship, is_officer BOOL, is_director BOOL,

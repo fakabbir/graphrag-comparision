@@ -5,14 +5,12 @@ We measured three retrieval architectures over one corpus and one question set:
 167{,}050 SEC filings from 10{,}511 companies, 508{,}714 embedded chunks and a
 graph of 430{,}257 nodes and 561{,}144 edges, queried with 20 questions in four
 shape categories, each asked three times, for 180 attempts scored
-programmatically rather than by an LLM. GraphRAG solved 14 of 20 questions on all
-three attempts, text-to-SQL 9 and vector RAG 3.
+programmatically rather than by an LLM. GraphRAG solved 16 of 20 questions on all
+three attempts, text-to-SQL 10 and vector RAG 3.
 
-The aggregate is the least useful number in the paper. \textbf{GraphRAG lost two
-of the four categories}: structured aggregation to text-to-SQL as predicted, at 24
-times the token cost, and cross-document entity resolution to text-to-SQL against
-prediction. The defensible summary is therefore not that graphs beat vectors but a
-rule about question shape:
+The aggregate is the least useful number in the paper. GraphRAG lost structured
+aggregation outright and expensively, and the defensible summary is a rule about
+question shape rather than a winner:
 
 \begin{itemize}
   \item If the answer lies in one document and the entity is named, the binding
@@ -20,38 +18,43 @@ rule about question shape:
         alone fails at scale --- 3 of 15 here --- and needs either a metadata
         filter on a stable identifier or a traversal to supply one.
   \item If the question is a \texttt{GROUP BY} over typed columns, use SQL. A
-        traversal adds no information and adds a place to go wrong.
+        traversal adds no information, adds a place to go wrong, and cost 12.2
+        times the tokens to score 6 of 15 against 15 of 15.
   \item If the question requires resolving \emph{who} an entity is, or joining
         facts that separate documents assert, structural retrieval is worth its
-        cost. This is where the margin was unambiguous: 15 of 15 against 0 of 15
-        for both baselines.
+        cost: 14 of 15 and 15 of 15 on the two such categories, against 0 of 15
+        and 14 of 15 for the strongest baseline.
   \item If provenance must be auditable, the graph's advantage is categorical
-        rather than marginal. It was never uncited across 60 attempts, because the
-        traversal returns accession numbers before any text is read, whereas
-        text-to-SQL was right-but-unciteable 16 times.
+        rather than marginal. It was never uncited across 60 attempts, because
+        the traversal returns accession numbers before any text is read, whereas
+        the two baselines were right-but-unciteable 10 and 12 times.
 \end{itemize}
 
-The trustworthiness finding is narrower but sharper than the accuracy finding.
-Only 2 of 180 attempts asserted something verifiably false, and both were the same
-error: text-to-SQL conflating distinct people who share a surname, matching on the
-name the question supplied because that is what the text contains. Resolving
-identity to an identifier before reading any text prevents that class of error
-structurally rather than probabilistically. For an application where a confident
-wrong answer costs more than a refusal, that property may matter more than the
-pass rate.
+The safety finding is narrower but sharper than the accuracy finding, and it is
+the one we did not anticipate. All six confident falsehoods were text-to-SQL
+conflating distinct people who share a surname, and the count \emph{tripled} when
+we gave that baseline a better schema description. Capability and safety moved in
+opposite directions: knowing the schema converted honest refusals into assertive
+wrong answers. Resolving identity to an identifier before reading any text
+prevents that class of error structurally rather than probabilistically. For an
+application where a confident wrong answer costs more than a refusal, that
+property may matter more than the pass rate.
 
-We claim none of this beyond one corpus, one model and twenty questions.
+We claim none of this beyond one corpus, one model and twenty questions --- and
+one of our own published category results turned out to be a documentation bug
+rather than a finding, which is the strongest caution we can offer about how
+much weight a single benchmark run should carry.
 
 \subsection*{Future work}
 
 Four steps would materially strengthen these results. \emph{Re-run all 180
 attempts per model}, turning the cross-model probe of \Cref{tab:crossmodel} into a
-measurement and separating architectural effects from model effects. \emph{Repair
-the entity-resolution layer} --- 0.12\% \texttt{:RESOLVES\_TO} coverage and the
-name-normalization mismatch --- and re-measure T4, which is the only way to settle
-whether that loss is architectural or incidental. \emph{Obtain an independent
-question set}, since the present one was written by the author of the graph, which
-is the study's most serious threat. And \emph{vary the retriever}: a longer-context
-encoder with a metadata filter on CIK would test directly whether the T1 collapse
-is a property of embeddings or of this particular configuration --- our own
-diagnosis predicts the metadata filter, not the encoder, does the work.
+measurement and separating architectural effects from model effects.
+\emph{Repair the entity-resolution layer} --- \texttt{:RESOLVES\_TO} still covers
+0.12\% of subsidiary nodes --- and establish how much of the T4 result depends on
+it. \emph{Obtain an independent question set}, since the present one was written
+by the author of the graph, which remains the study's most serious threat. And
+\emph{vary the retriever}: a longer-context encoder with a metadata filter on CIK
+would test directly whether the single-document collapse is a property of
+embeddings or of this particular configuration --- our own diagnosis predicts the
+metadata filter, not the encoder, does the work.

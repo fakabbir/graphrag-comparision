@@ -24,50 +24,56 @@ document fetch and embedding are about 82\%. The fetch component is bounded
 externally by EDGAR's ten-requests-per-second fair-access policy
 \citep{sec2024edgar} and cannot be parallelized away.
 
-\subsection{Defects found in the measurement harness}
+\subsection{Auditing the harness}
+\label{sec:harness}
 
-We record these because an unaudited benchmark harness is itself a leading source
-of confident wrong conclusions. Each of the following would have produced a
-publishable-looking but incorrect result. Seven were found before the reported
-numbers were generated; the eighth was found afterwards and fixed by re-scoring
-the stored answers.
+Building the measurement code surfaced defects that, unnoticed, would each have
+produced a publishable-looking but incorrect result: a pgvector post-filter that
+returned 0 of 8 rows while 164 matched, so the vector arm was briefly scored on
+an empty retriever; an answer-token cap that truncated answers mid-citation,
+silently converting passes into uncited; a global token counter that attributed
+every thread's cost to whichever arm read it first. These were found and fixed
+before the reported numbers were generated, so they are development history
+rather than caveats on the results, and we do not enumerate them here.
 
-\begin{enumerate}
-  \item \textbf{Asymmetric schema documentation.} The SQL schema description
-        omitted the surname-first name convention that the graph description
-        included. Text-to-SQL was failing for a reason that had nothing to do with
-        its architecture.
-  \item \textbf{An empty retriever.} pgvector applies a \texttt{WHERE} filter
-        after the HNSW walk selects candidates, so a selective filter returned 0
-        of 8 rows while 164 matched. Vector RAG was being scored on a retriever
-        that returned nothing. Fixed by enabling iterative scan.
-  \item \textbf{A use-before-assignment} scored text-to-SQL 0 out of 12 for an
-        entire run.
-  \item \textbf{A citation scorer that punished correct provenance.} On aggregate
-        questions with no ground-truth citation set, any cited accession was
-        counted as wrong, mis-labelling correct answers as falsehoods.
-  \item \textbf{A truncating answer cap.} A 900-token limit cut answers
-        mid-citation, converting passes into uncited.
-  \item \textbf{Thread-unsafe measurement.} Concurrent encoder calls segfaulted
-        the interpreter; a shared database connection interleaved cursors across
-        threads.
-  \item \textbf{A global token counter} attributed every thread's tokens to
-        whichever arm read it first, so the reported per-arm cost was wrong.
-  \item \textbf{A ground-truth error, found after the fact.} One T4 question
-        accepted a single expected parent where the loaded data contains three
-        filers that genuinely list the subsidiary. All three arms were naming a
-        real parent and being scored wrong. Because the model answers were stored,
-        correcting the ground truth and re-scoring cost no additional inference:
-        text-to-SQL moved 28$\rightarrow$29, vector RAG 6$\rightarrow$9 and
-        GraphRAG 44$\rightarrow$45.
-\end{enumerate}
+Two are worth reporting, because they did reach published numbers.
 
-A ninth defect was found while preparing this paper and is not in the results
-above because it never entered them: a stale statistics export recorded
-\texttt{:RESOLVES\_TO} as 1{,}232 edges where the live graph holds 246. It was
-caught only because the per-type edge counts refused to sum to the graph's total
---- an arithmetic identity that a dashboard does not check but a table in a paper
-does.
+\textbf{A ground-truth error, found after the first analysis.} One
+cross-document question accepted a single expected parent where the loaded data
+contains three filers that genuinely list the subsidiary. All three arms were
+naming a real parent and being scored wrong. Because every model answer is
+stored, correcting the ground truth and re-scoring cost no additional inference;
+it moved text-to-SQL from 28 to 29 passing attempts, vector RAG from 6 to 9 and
+GraphRAG from 44 to 45. That we found it after believing the results were final
+is direct evidence that others may remain.
+
+\textbf{An asymmetry that penalised the graph, and what fixing it changed.}
+The more instructive defect is one we initially reported as a finding. Both
+stores keep a normalised name column, lowercased with corporate suffixes
+stripped, so \emph{AEP Texas Inc.}\ is stored as \texttt{aep texas}. Neither
+schema description said so. Text-to-SQL was unaffected because it matched the
+raw column with \texttt{ILIKE}; the graph arm wrote an exact property match
+against \texttt{nameNormalized} using the name as it appeared in the question,
+retrieved zero rows, and refused. We first published that as a category loss for
+structural retrieval.
+
+It is not one. It is the same class of defect as an asymmetry we had already
+found and fixed in the opposite direction --- an earlier iteration documented a
+name convention to the graph but not to SQL, making text-to-SQL fail for a
+reason unrelated to its architecture. Having recorded that, we should have
+checked for its mirror image and did not.
+
+We therefore documented the normalisation identically in both schema
+descriptions, changing no retrieval code and no question, and re-ran all 180
+attempts. \Cref{tab:beforeafter} reports both measurements. We present the
+repaired numbers as the paper's result and the original alongside them, because
+a fix that moves a headline in the author's favour should be visible rather than
+quietly absorbed.
+
+The general lesson is not that our harness had bugs. It is that a benchmark
+harness is itself an instrument requiring calibration, and that a list of
+defects already found is only useful if it is read as a checklist for the ones
+not yet found.
 
 \subsection{Artifacts}
 

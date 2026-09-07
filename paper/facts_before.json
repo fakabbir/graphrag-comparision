@@ -564,11 +564,6 @@
    1081344
   ]
  ],
- "resolution": {
-  "resolves_to_edges": 246,
-  "subsidiary_nodes": 200869,
-  "coverage_pct": 0.122
- },
  "types": [
   {
    "id": "T1",
@@ -576,18 +571,18 @@
    "expect": "vector RAG or GraphRAG",
    "modes": {
     "text_to_sql": {
-     "attempts_pass": 7,
+     "attempts_pass": 0,
      "attempts": 15,
-     "q_solid": 1,
-     "q_partial": 2,
+     "q_solid": 0,
+     "q_partial": 0,
      "questions": 5,
      "halluc": 0,
-     "uncited": 6,
-     "refused": 2,
+     "uncited": 14,
+     "refused": 1,
      "fail": 0,
-     "lat_mean": 3.5,
-     "lat_max": 4.3,
-     "tokens": 31409
+     "lat_mean": 3.4,
+     "lat_max": 4.2,
+     "tokens": 28484
     },
     "vector_rag": {
      "attempts_pass": 3,
@@ -596,12 +591,12 @@
      "q_partial": 0,
      "questions": 5,
      "halluc": 0,
-     "uncited": 12,
-     "refused": 0,
+     "uncited": 6,
+     "refused": 6,
      "fail": 0,
-     "lat_mean": 1.3,
-     "lat_max": 4.6,
-     "tokens": 29273
+     "lat_mean": 1.6,
+     "lat_max": 5.2,
+     "tokens": 29433
     },
     "graphrag": {
      "attempts_pass": 15,
@@ -613,9 +608,9 @@
      "uncited": 0,
      "refused": 0,
      "fail": 0,
-     "lat_mean": 3.9,
-     "lat_max": 4.3,
-     "tokens": 39643
+     "lat_mean": 4.3,
+     "lat_max": 4.9,
+     "tokens": 40452
     }
    }
   },
@@ -636,7 +631,7 @@
      "fail": 0,
      "lat_mean": 1.9,
      "lat_max": 2.6,
-     "tokens": 27785
+     "tokens": 24604
     },
     "vector_rag": {
      "attempts_pass": 0,
@@ -648,9 +643,9 @@
      "uncited": 0,
      "refused": 15,
      "fail": 0,
-     "lat_mean": 1.2,
-     "lat_max": 1.9,
-     "tokens": 29753
+     "lat_mean": 1.3,
+     "lat_max": 2.3,
+     "tokens": 29742
     },
     "graphrag": {
      "attempts_pass": 6,
@@ -660,11 +655,11 @@
      "questions": 5,
      "halluc": 0,
      "uncited": 0,
-     "refused": 1,
-     "fail": 8,
-     "lat_mean": 4.9,
-     "lat_max": 7.7,
-     "tokens": 338824
+     "refused": 2,
+     "fail": 7,
+     "lat_mean": 7.0,
+     "lat_max": 21.8,
+     "tokens": 590453
     }
    }
   },
@@ -679,13 +674,13 @@
      "q_solid": 0,
      "q_partial": 0,
      "questions": 5,
-     "halluc": 6,
-     "uncited": 4,
-     "refused": 5,
-     "fail": 0,
-     "lat_mean": 31.6,
-     "lat_max": 274.5,
-     "tokens": 56924
+     "halluc": 2,
+     "uncited": 2,
+     "refused": 10,
+     "fail": 1,
+     "lat_mean": 91.8,
+     "lat_max": 445.5,
+     "tokens": 73694
     },
     "vector_rag": {
      "attempts_pass": 0,
@@ -697,23 +692,23 @@
      "uncited": 0,
      "refused": 15,
      "fail": 0,
-     "lat_mean": 1.5,
-     "lat_max": 3.3,
-     "tokens": 27897
+     "lat_mean": 2.0,
+     "lat_max": 4.0,
+     "tokens": 28538
     },
     "graphrag": {
-     "attempts_pass": 14,
+     "attempts_pass": 15,
      "attempts": 15,
-     "q_solid": 4,
-     "q_partial": 1,
+     "q_solid": 5,
+     "q_partial": 0,
      "questions": 5,
      "halluc": 0,
      "uncited": 0,
      "refused": 0,
-     "fail": 1,
-     "lat_mean": 5.0,
-     "lat_max": 5.7,
-     "tokens": 81878
+     "fail": 0,
+     "lat_mean": 6.7,
+     "lat_max": 10.7,
+     "tokens": 93859
     }
    }
   },
@@ -732,9 +727,9 @@
      "uncited": 0,
      "refused": 1,
      "fail": 0,
-     "lat_mean": 2.9,
-     "lat_max": 3.7,
-     "tokens": 27950
+     "lat_mean": 4.1,
+     "lat_max": 6.7,
+     "tokens": 31389
     },
     "vector_rag": {
      "attempts_pass": 6,
@@ -746,82 +741,102 @@
      "uncited": 0,
      "refused": 9,
      "fail": 0,
-     "lat_mean": 1.4,
-     "lat_max": 2.2,
-     "tokens": 31262
+     "lat_mean": 1.6,
+     "lat_max": 2.7,
+     "tokens": 31137
     },
     "graphrag": {
-     "attempts_pass": 15,
+     "attempts_pass": 9,
      "attempts": 15,
-     "q_solid": 5,
-     "q_partial": 0,
+     "q_solid": 2,
+     "q_partial": 2,
      "questions": 5,
      "halluc": 0,
      "uncited": 0,
-     "refused": 0,
+     "refused": 6,
      "fail": 0,
-     "lat_mean": 4.8,
-     "lat_max": 8.6,
-     "tokens": 60584
+     "lat_mean": 5.9,
+     "lat_max": 8.8,
+     "tokens": 55736
     }
    }
   }
  ],
  "totals": {
   "text_to_sql": {
-   "passes": 36,
+   "passes": 29,
    "runs": 60,
-   "halluc": 6,
-   "uncited": 10,
-   "refused": 8,
-   "q_solid": 10,
-   "q_partial": 3,
+   "halluc": 2,
+   "refused": 12,
+   "uncited": 16,
+   "tokens": 158171,
+   "latency": 25.3,
+   "evidence": 3170,
+   "q_solid": 9,
+   "q_partial": 1,
    "questions": 20,
-   "tokens": 144068,
-   "calls": 125,
-   "latency": 10.0,
-   "lat_max": 274.5,
-   "evidence": 1795
+   "lat_max": 445.5,
+   "calls": 127
   },
   "vector_rag": {
    "passes": 9,
    "runs": 60,
    "halluc": 0,
-   "uncited": 12,
-   "refused": 39,
+   "refused": 45,
+   "uncited": 6,
+   "tokens": 118850,
+   "latency": 1.6,
+   "evidence": 8557,
    "q_solid": 3,
    "q_partial": 0,
    "questions": 20,
-   "tokens": 118185,
-   "calls": 60,
-   "latency": 1.3,
-   "lat_max": 4.6,
-   "evidence": 8557
+   "lat_max": 5.2,
+   "calls": 60
   },
   "graphrag": {
-   "passes": 50,
+   "passes": 45,
    "runs": 60,
    "halluc": 0,
+   "refused": 8,
    "uncited": 0,
-   "refused": 1,
-   "q_solid": 16,
-   "q_partial": 1,
+   "tokens": 780500,
+   "latency": 5.9,
+   "evidence": 6485,
+   "q_solid": 14,
+   "q_partial": 2,
    "questions": 20,
-   "tokens": 520929,
-   "calls": 139,
-   "latency": 4.6,
-   "lat_max": 8.6,
-   "evidence": 6084
+   "lat_max": 21.8,
+   "calls": 154
   }
  },
  "usage": {
-  "calls": 324,
-  "prompt_tokens": 725175,
-  "completion_tokens": 58007,
+  "calls": 341,
+  "prompt_tokens": 995657,
+  "completion_tokens": 61864,
   "reasoning_tokens": 0,
-  "total_tokens": 783182
+  "total_tokens": 1057521
  },
  "repair": {
+  "text_to_sql": {
+   "total": 7,
+   "of": 60,
+   "by_type": {
+    "T1": 3,
+    "T2": 0,
+    "T3": 1,
+    "T4": 3
+   }
+  },
+  "graphrag": {
+   "total": 34,
+   "of": 60,
+   "by_type": {
+    "T1": 4,
+    "T2": 9,
+    "T3": 6,
+    "T4": 15
+   }
+  },
   "vector_rag": {
    "total": 0,
    "of": 60,
@@ -831,39 +846,111 @@
     "T3": 0,
     "T4": 0
    }
-  },
-  "text_to_sql": {
-   "total": 5,
-   "of": 60,
-   "by_type": {
-    "T1": 3,
-    "T2": 1,
-    "T3": 0,
-    "T4": 1
-   }
-  },
-  "graphrag": {
-   "total": 19,
-   "of": 60,
-   "by_type": {
-    "T1": 1,
-    "T2": 9,
-    "T3": 0,
-    "T4": 9
-   }
   }
  },
+ "inconsistent": [
+  [
+   "T1-1",
+   "vector_rag",
+   [
+    "refused",
+    "uncited",
+    "uncited"
+   ]
+  ],
+  [
+   "T1-3",
+   "vector_rag",
+   [
+    "refused",
+    "uncited",
+    "refused"
+   ]
+  ],
+  [
+   "T1-5",
+   "text_to_sql",
+   [
+    "uncited",
+    "uncited",
+    "refused"
+   ]
+  ],
+  [
+   "T2-3",
+   "graphrag",
+   [
+    "refused",
+    "fail",
+    "refused"
+   ]
+  ],
+  [
+   "T3-2",
+   "text_to_sql",
+   [
+    "halluc",
+    "fail",
+    "refused"
+   ]
+  ],
+  [
+   "T3-3",
+   "text_to_sql",
+   [
+    "halluc",
+    "refused",
+    "refused"
+   ]
+  ],
+  [
+   "T3-5",
+   "text_to_sql",
+   [
+    "refused",
+    "uncited",
+    "uncited"
+   ]
+  ],
+  [
+   "T4-3",
+   "graphrag",
+   [
+    "pass",
+    "refused",
+    "pass"
+   ]
+  ],
+  [
+   "T4-4",
+   "text_to_sql",
+   [
+    "refused",
+    "pass",
+    "pass"
+   ]
+  ],
+  [
+   "T4-4",
+   "graphrag",
+   [
+    "refused",
+    "pass",
+    "refused"
+   ]
+  ]
+ ],
  "grid": [
   {
    "id": "T1-1",
    "type": "T1",
    "text_to_sql": [
-    "refused",
-    "pass",
-    "pass"
+    "uncited",
+    "uncited",
+    "uncited"
    ],
    "vector_rag": [
-    "uncited",
+    "refused",
     "uncited",
     "uncited"
    ],
@@ -877,9 +964,9 @@
    "id": "T1-2",
    "type": "T1",
    "text_to_sql": [
-    "pass",
-    "pass",
-    "pass"
+    "uncited",
+    "uncited",
+    "uncited"
    ],
    "vector_rag": [
     "pass",
@@ -901,9 +988,9 @@
     "uncited"
    ],
    "vector_rag": [
+    "refused",
     "uncited",
-    "uncited",
-    "uncited"
+    "refused"
    ],
    "graphrag": [
     "pass",
@@ -915,14 +1002,14 @@
    "id": "T1-4",
    "type": "T1",
    "text_to_sql": [
-    "pass",
-    "refused",
-    "pass"
-   ],
-   "vector_rag": [
     "uncited",
     "uncited",
     "uncited"
+   ],
+   "vector_rag": [
+    "refused",
+    "refused",
+    "refused"
    ],
    "graphrag": [
     "pass",
@@ -936,7 +1023,7 @@
    "text_to_sql": [
     "uncited",
     "uncited",
-    "uncited"
+    "refused"
    ],
    "vector_rag": [
     "uncited",
@@ -1001,9 +1088,9 @@
     "refused"
    ],
    "graphrag": [
+    "refused",
     "fail",
-    "fail",
-    "fail"
+    "refused"
    ]
   },
   {
@@ -1021,7 +1108,7 @@
    ],
    "graphrag": [
     "fail",
-    "refused",
+    "fail",
     "fail"
    ]
   },
@@ -1049,7 +1136,7 @@
    "type": "T3",
    "text_to_sql": [
     "refused",
-    "halluc",
+    "refused",
     "refused"
    ],
    "vector_rag": [
@@ -1068,7 +1155,7 @@
    "type": "T3",
    "text_to_sql": [
     "halluc",
-    "halluc",
+    "fail",
     "refused"
    ],
    "vector_rag": [
@@ -1086,8 +1173,8 @@
    "id": "T3-3",
    "type": "T3",
    "text_to_sql": [
-    "refused",
     "halluc",
+    "refused",
     "refused"
    ],
    "vector_rag": [
@@ -1105,9 +1192,9 @@
    "id": "T3-4",
    "type": "T3",
    "text_to_sql": [
-    "uncited",
-    "halluc",
-    "halluc"
+    "refused",
+    "refused",
+    "refused"
    ],
    "vector_rag": [
     "refused",
@@ -1124,7 +1211,7 @@
    "id": "T3-5",
    "type": "T3",
    "text_to_sql": [
-    "uncited",
+    "refused",
     "uncited",
     "uncited"
    ],
@@ -1136,7 +1223,7 @@
    "graphrag": [
     "pass",
     "pass",
-    "fail"
+    "pass"
    ]
   },
   {
@@ -1172,9 +1259,9 @@
     "refused"
    ],
    "graphrag": [
-    "pass",
-    "pass",
-    "pass"
+    "refused",
+    "refused",
+    "refused"
    ]
   },
   {
@@ -1192,7 +1279,7 @@
    ],
    "graphrag": [
     "pass",
-    "pass",
+    "refused",
     "pass"
    ]
   },
@@ -1210,9 +1297,9 @@
     "pass"
    ],
    "graphrag": [
+    "refused",
     "pass",
-    "pass",
-    "pass"
+    "refused"
    ]
   },
   {
@@ -1235,101 +1322,7 @@
    ]
   }
  ],
- "killer": "T3-2",
- "inconsistent": [
-  [
-   "T1-1",
-   "text_to_sql",
-   [
-    "refused",
-    "pass",
-    "pass"
-   ]
-  ],
-  [
-   "T1-4",
-   "text_to_sql",
-   [
-    "pass",
-    "refused",
-    "pass"
-   ]
-  ],
-  [
-   "T2-4",
-   "graphrag",
-   [
-    "fail",
-    "refused",
-    "fail"
-   ]
-  ],
-  [
-   "T3-1",
-   "text_to_sql",
-   [
-    "refused",
-    "halluc",
-    "refused"
-   ]
-  ],
-  [
-   "T3-2",
-   "text_to_sql",
-   [
-    "halluc",
-    "halluc",
-    "refused"
-   ]
-  ],
-  [
-   "T3-3",
-   "text_to_sql",
-   [
-    "refused",
-    "halluc",
-    "refused"
-   ]
-  ],
-  [
-   "T3-4",
-   "text_to_sql",
-   [
-    "uncited",
-    "halluc",
-    "halluc"
-   ]
-  ],
-  [
-   "T3-5",
-   "graphrag",
-   [
-    "pass",
-    "pass",
-    "fail"
-   ]
-  ],
-  [
-   "T4-4",
-   "text_to_sql",
-   [
-    "refused",
-    "pass",
-    "pass"
-   ]
-  ]
- ],
  "halluc": [
-  {
-   "qid": "T3-1",
-   "mode": "text_to_sql",
-   "trial": 1,
-   "forbidden": [
-    "ChoiceOne",
-    "Sidus Space"
-   ],
-   "answer_head": "Brian Wendling is an officer or director at multiple companies in the dataset. For each company, the disclosed subsidiaries and 10-K cybersecurity risk summaries are:  **CHOICEONE FINANCIAL SERVICES INC** (accession not cited in rows) - Subsidiaries: 109 East Division; ChoiceOne Bank; ChoiceOne Insu"
-  },
   {
    "qid": "T3-2",
    "mode": "text_to_sql",
@@ -1338,49 +1331,22 @@
     "Mondelez",
     "Ternium"
    ],
-   "answer_head": "Monica Lozano holds insider roles at four companies in this dataset. For each, the disclosed subsidiaries and 10-K cybersecurity risk summaries are:  1. **Apple Inc.** (CIK 320193) \u2014 Subsidiaries include Apple Asia Limited, Apple Canada Inc, Apple Computer Trading (Shanghai) Co., Ltd, Apple Distribu"
-  },
-  {
-   "qid": "T3-2",
-   "mode": "text_to_sql",
-   "trial": 1,
-   "forbidden": [
-    "Mondelez",
-    "Ternium"
-   ],
-   "answer_head": "Monica Lozano is an officer or director at the following companies in the dataset:  1. **Apple Inc.** (CIK 320193)    - **Subsidiaries:** Apple Asia Limited; Apple Canada Inc; Apple Computer Trading (Shanghai) Co., Ltd; Apple Distribution International Limited; Apple India Private Limited; Apple Ins"
+   "answer_head": "Monica Lozano is an officer or director at five companies in the dataset. For each, the disclosed subsidiaries and 10-K cybersecurity risk summaries are:  1. **Apple Inc.** (CIK 320193) \u2014 Subsidiaries include Apple Asia Limited, Apple Canada Inc, Apple Computer Trading (Shanghai) Co., Ltd, Apple Dis"
   },
   {
    "qid": "T3-3",
    "mode": "text_to_sql",
-   "trial": 1,
+   "trial": 0,
    "forbidden": [
     "Hawthorn",
     "Mission Produce",
     "Core & Main",
     "Scripps"
    ],
-   "answer_head": "William Giles holds insider roles at 11 companies in the dataset. For each, the disclosed subsidiaries and cybersecurity risk summaries are:  - **Brinker International, Inc.** (703351): Subsidiaries include BIPC Global Payroll Company, LLC, Brinker Canadian Holding Co., ULC, Brinker FHC B.V., and ot"
-  },
-  {
-   "qid": "T3-4",
-   "mode": "text_to_sql",
-   "trial": 1,
-   "forbidden": [
-    "Smith Midland"
-   ],
-   "answer_head": "Judy Bruner is an officer or director at three companies in the dataset:  1. **Applied Materials Inc /DE** (CIK 6951) \u2014 Subsidiaries include Applied Materials Asia-Pacific, LLC; Applied Materials Belgium N.V; Applied Materials Canada, Inc; Applied Materials (China) Holdings, Ltd; Applied Materials C"
-  },
-  {
-   "qid": "T3-4",
-   "mode": "text_to_sql",
-   "trial": 2,
-   "forbidden": [
-    "Smith Midland"
-   ],
-   "answer_head": "Judy Bruner holds insider roles at three companies in the dataset:  1. **APPLIED MATERIALS INC /DE** \u2013 Subsidiaries include Applied Materials Asia-Pacific, LLC; Applied Materials Belgium N.V; Applied Materials Canada, Inc; Applied Materials (China) Holdings, Ltd; Applied Materials China, Limited; Ap"
+   "answer_head": "William Giles holds insider roles at 10 companies. For each, here are the disclosed subsidiaries and cyber risk summaries:  1. **BRINKER INTERNATIONAL, INC** (accession not cited in rows): Subsidiaries include BIPC Global Payroll Company, LLC; BIPC Investments, LLC; BIPC Management, LLC; Brinker Can"
   }
  ],
+ "killer": "T3-2",
  "questions": [
   {
    "id": "T1-1",
@@ -1645,5 +1611,10 @@
     "AllianceBernstein L.P.|Equitable Holdings|AllianceBernstein Holding"
    ]
   }
- ]
+ ],
+ "resolution": {
+  "resolves_to_edges": 246,
+  "subsidiary_nodes": 200869,
+  "coverage_pct": 0.122
+ }
 }

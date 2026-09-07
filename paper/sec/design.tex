@@ -79,13 +79,13 @@ scored and every attempt counts, and there is no best-of-three anywhere in the
 reported numbers.
 
 This is not ceremony. Even at temperature 0 the generations are not
-deterministic, and \textbf{10 of the 60} question-by-architecture cells returned
-different labels across their three attempts --- 5 for text-to-SQL, 3 for
-GraphRAG, 2 for vector RAG. The most consequential single cell is text-to-SQL on
-the featured multi-hop question, whose three attempts were a falsehood, a fail and
-a refusal. A single-attempt benchmark that happened to draw the third would have
-recorded a harmless abstention and missed the paper's most important finding
-entirely.
+deterministic, and \textbf{9 of the 60}
+question-by-architecture cells returned different labels across their three
+attempts --- 7 for text-to-SQL, 2 for GraphRAG and
+0 for vector RAG. Text-to-SQL was inconsistent on four of the five
+multi-hop questions, which is precisely where its false statements occur: an
+evaluation drawing a single attempt per question could record an honest refusal
+on the same question where another draw asserts something false.
 
 We therefore report two metrics. \textbf{Attempts passed} out of 60 is the raw
 rate. \textbf{Questions solved} out of 20 credits a question only when all three

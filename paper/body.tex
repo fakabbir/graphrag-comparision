@@ -142,7 +142,7 @@ against expectation.}
 \caption{Tokens against attempts passed.}
 \label{fig:cost}
 \end{subfigure}
-\caption{The economics. (a) Text-to-SQL's T3 mean of 92\,s, worst attempt 445\,s, is the SQL and not the model: the generated queries join three tables without narrowing first. (b) GraphRAG's accuracy is bought, at roughly 17{,}300 tokens per passing attempt against text-to-SQL's 5{,}450.}
+\caption{The economics. (a) Text-to-SQL's T3 mean is the SQL and not the model: the generated queries join three tables without narrowing first. (b) GraphRAG's accuracy is bought: it has the highest token cost per passing attempt of the three, the exact figures being in \Cref{tab:main}.}
 \label{fig:econ}
 \end{widefig}
 
@@ -194,6 +194,19 @@ single-model benchmark bounds what can be claimed.}
 
 % ════════════════════════════════════════════════════════════════════════
 \input{sec/repro}
+
+\begin{widetab}[htbp]
+\centering
+\small
+\input{gen/tab_beforeafter.tex}
+\caption{The published measurement (\emph{pub.}) and the repaired one
+(\emph{rep.}) after documenting the name normalisation identically in both
+schema descriptions. Nothing else changed: same questions, same retrieval code,
+same model and settings, and the statement timeout added later for the live
+service was disabled so that exactly one variable differs. Shown in full because
+the repair moves a headline in the author's favour.}
+\label{tab:beforeafter}
+\end{widetab}
 
 \begin{widetab}[htbp]
 \centering

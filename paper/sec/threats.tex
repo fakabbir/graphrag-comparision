@@ -40,13 +40,17 @@ the filer chose not to disclose is unanswerable from this corpus by any of the
 three arms, and our ground truth is defined against what was disclosed rather than
 against reality.
 
-\textbf{T4 measures an implementation, not an architecture --- and that cuts both
-ways.} GraphRAG's loss on T4 is attributable to 0.12\% \texttt{:RESOLVES\_TO}
-coverage and a name-normalization mismatch, both fixable. A charitable reading
-says the architecture would win T4 once repaired. We resist it: we did not repair
-and re-measure, so the charitable reading is untested. The same logic applies in
-reverse to the wins --- some part of GraphRAG's T1 and T3 margins may reflect
-implementation effort we spent on the graph and not on the baselines.
+\textbf{Category results move with implementation details.} GraphRAG's
+originally published loss on T4 turned out to be a documentation defect in our
+own harness rather than a property of the graph, and repairing it changed the
+category (\Cref{sec:harness}, \Cref{tab:beforeafter}). We report the repaired
+numbers, but the episode is itself a threat: if one such defect was worth a
+category, others may be latent in results we have not thought to re-examine, and
+the ones we would be least likely to notice are those that flatter the design.
+The same logic applies in reverse to the wins --- some part of GraphRAG's T1 and
+T3 margins may reflect implementation effort we spent on the graph and not on the
+baselines. \texttt{:RESOLVES\_TO} coverage of 0.12\% remains unrepaired and
+still bounds what any entity-resolution question can measure here.
 
 \textbf{Repair asymmetry favours the graph.} As recorded in \Cref{sec:design},
 the zero-row repair trigger fires for a graph query that misses but not for an

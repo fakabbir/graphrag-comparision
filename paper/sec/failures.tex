@@ -33,33 +33,45 @@ on CIK would very likely fix T1 --- which is precisely the point, since a metada
 filter on a stable identifier \emph{is} structural retrieval, arriving by another
 route.
 
-\subsection{Plain SQL beat GraphRAG at entity resolution}
+\subsection{The category we got wrong, and what it cost}
 
-T4 was written for the graph and text-to-SQL won it, 14 of 15 attempts against 9
-of 15, and 4 of 5 questions against 2 of 5. GraphRAG's six misses were all
-refusals; it never asserted anything false.
+We first published T4 --- cross-document entity resolution --- as a loss for
+structural retrieval: text-to-SQL 14 of 15 attempts against GraphRAG's 9, in the
+category written for the graph. It was not a loss. It was a defect in our schema
+documentation, described in \Cref{sec:harness}. Both stores normalise names by
+stripping corporate suffixes, neither schema description said so, and only the
+graph arm was exposed because it matched the property exactly while text-to-SQL
+matched the raw column with \texttt{ILIKE}. Repaired, GraphRAG passes 15 of 15.
 
-Two causes compound. The first is schema thinness. The \texttt{:RESOLVES\_TO}
-layer, which is exactly the relation T4 interrogates, holds 246 edges against
-200{,}869 subsidiary nodes --- 0.12\% coverage. EX-21 carries no CIK for a
-subsidiary, so establishing that a listed subsidiary is itself a filer requires
-name matching, and we did little of it. The graph was asked a question its
-weakest layer supports.
+We keep the episode in the paper for three reasons, none of them flattering.
 
-The second is a normalization mismatch. The loader canonicalizes subsidiary names
-by stripping corporate suffixes, so \emph{AEP Texas Inc.} is stored as
-\texttt{aep texas}. The model, seeing the name as written in the question, produced
-Cypher matching \verb|nameNormalized: 'aep texas inc'|, which returns zero rows;
-the repair attempt frequently missed as well, and that question scored 0 of 3.
-Postgres won the same question because \verb|ILIKE '%aep texas%'| is forgiving in
-a way an exact property match is not.
+First, it shows how narrow the margin is between an architectural finding and a
+documentation bug. Nothing about the traversal changed. One sentence of schema
+prose was worth six attempts and a category.
 
-The lesson generalizes beyond this bug: a normalized join key is a liability when
-the query author cannot see the normalization. It is also a caution about
-attributing architecture-level conclusions to implementation defects. We did not
-re-run the arm with the normalization repaired, so this is a diagnosis rather than
-a measured result, and the honest reading is that T4 tests our implementation more
-than it tests the graph model.
+Second, the repair was not free elsewhere and not confined to the graph. The same
+sentence added to the SQL schema description moved text-to-SQL's single-document
+score from 0 of 15 to 7 of 15, so our original report understated \emph{both} the
+graph and the strongest baseline. \Cref{tab:beforeafter} gives the full movement.
+A fix that only helped the author's preferred system would deserve suspicion;
+this one helped the baseline more in raw attempts.
+
+Third, and most usefully, it made the baseline \emph{more dangerous}. Text-to-SQL's
+confident falsehoods rose from 2 to 6. Better schema knowledge did not make it
+more careful; it converted refusals into assertive multi-hop answers, and on this
+corpus an assertive multi-hop answer keyed on a person's name is how you conflate
+three different people called Lozano. The safety property did not improve with
+capability. It degraded with it.
+
+\subsection{The remaining T4 failure}
+
+One T4 question still fails for the graph on some attempts, and we did not chase
+it. \texttt{Alexander's, Inc.}\ normalises to \texttt{alexander s} because the
+apostrophe is replaced rather than removed, so a match on the normalised form
+requires reproducing that specific transformation. We fixed the documented
+convention once, symmetrically, and re-measured once. Continuing to tune until a
+particular question passes is how a benchmark stops measuring anything, so the
+residual failure is reported rather than removed.
 
 \subsection{GraphRAG lost aggregation, as predicted}
 
@@ -78,24 +90,28 @@ also attached 190 accession numbers to a question that needs none.
 For counting over typed columns the graph adds no information and the extra hop
 adds a place to go wrong, at 24 times the token cost.
 
-\subsection{The only two falsehoods were surname collisions}
+\subsection{Every falsehood was a surname collision}
 
-Two of the 180 attempts stated something verifiably false, both text-to-SQL on T3,
-and both are the same failure. Asked about \emph{Monica Lozano}, the model reported
-five companies including Mondelez and Ternium; those belong to Mariano and
-Santiago Lozano, different people who share a surname. Asked about
+Six of the 180 attempts stated something verifiably false. All six were
+text-to-SQL, all six on the multi-hop category, and all six are the same error,
+spread across four of its five questions (\texttt{T3-1}, \texttt{T3-2}, \texttt{T3-3}, \texttt{T3-4}). Asked about \emph{Monica Lozano},
+the model reported companies including Mondelez and Ternium; those belong to
+Mariano and Santiago Lozano, different people who share a surname. Asked about
 \emph{William Giles}, it reported ten companies.
 
 The SQL was not malformed and the model was fluent and confident. It matched on
 name because name is what the question supplied and what the text contains. This
-is the exact failure that resolving identity to a CIK before reading any text
-prevents structurally: GraphRAG passed all three attempts on the same question,
-keyed on CIK, and the other Lozanos never entered its result set.
+is the exact failure that resolving identity to an identifier before reading any
+text prevents structurally rather than probabilistically: GraphRAG passed 14 of
+15 attempts on this category and made no false statement in either measurement,
+because the other Lozanos never entered its result set.
 
-It is worth stating the counterfactual plainly. Of the three attempts text-to-SQL
-made on that question, one was this falsehood, one was an ordinary fail and one was
-an honest refusal. A single-attempt evaluation had a two-in-three chance of not
-seeing it.
+Two observations sharpen this. The first is that the count \emph{rose} when we
+improved the baseline's schema documentation, from 2 to 6; capability and safety
+moved in opposite directions. The second is a caution about single-attempt
+evaluation: of the three attempts text-to-SQL made on the featured question, the
+outcomes were not identical, and an evaluation that drew only one of them could
+easily have recorded an honest refusal and missed the failure entirely.
 
 \subsection{The verdict is model-sensitive}
 

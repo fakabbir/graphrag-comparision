@@ -152,5 +152,12 @@
   "t3_mean_s": 92,
   "t3_max_s": 445,
   "cause": "joins subsidiary x filing_section x reporting_owner without narrowing first"
+ },
+ "observed": {
+  "t2_jurisdiction_wrong_aggregate": 2415,
+  "t2_jurisdiction_correct_aggregate": 62504,
+  "t2_jurisdiction_citations_attached": 190,
+  "reasoning_tokens_per_call_uncapped": 33000,
+  "note": "values read from the stored model answers; cited in the failure analysis"
  }
 }

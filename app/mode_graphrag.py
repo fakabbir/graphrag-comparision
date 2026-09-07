@@ -20,6 +20,13 @@ GRAPH_SCHEMA = textwrap.dedent("""
       (:Company   {cik INT, name, sic, sicDescription, source})
       (:Person    {cik INT, name})                       -- insiders from Forms 3/4/5
       (:Subsidiary{nameNormalized, name, jurisdiction})   -- from EX-21; has NO cik
+        `name` is verbatim as filed: "AEP Texas Inc.", "Alexander's, Inc."
+        `nameNormalized` is lowercased AND HAS CORPORATE SUFFIXES REMOVED, so
+        "AEP Texas Inc." is stored as 'aep texas' and "Athene Holding Ltd." as
+        'athene holding'. Inc/Corp/Ltd/LLC/LP/PLC/Co/Holdings-style suffixes and
+        all punctuation are stripped. NEVER match nameNormalized against a name
+        copied from the question: either strip the suffix yourself, or match the
+        raw name with toLower(s.name) CONTAINS 'aep texas'.
       (:AuditFirm {firmKey, name, pcaobFirmId})
       (:Filing    {accessionNumber, formType, filingDate DATE, periodOfReport DATE,
                    hasRiskFactors BOOL, riskFactorChars INT, indexUrl})
